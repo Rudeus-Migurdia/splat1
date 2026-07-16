@@ -136,6 +136,43 @@ def test_query_margin_positive_never_reduces_base_activation():
     assert torch.allclose(output[:, 0], torch.tensor([0.8, 0.7]))
 
 
+def test_query_positive_uses_only_current_query_score():
+    base = torch.tensor([[0.8, 0.9], [0.7, 0.1]])
+    candidate = torch.tensor([[0.7, 0.1], [0.8, 0.9]])
+    output, selected = route_query_activation(base, candidate, 0, "query_positive")
+    assert selected.tolist() == [False, True]
+    assert torch.allclose(output[:, 0], torch.tensor([0.8, 0.8]))
+
+
+def test_query_positive_respects_training_candidate_mask():
+    base = torch.tensor([[0.2, 0.9], [0.2, 0.1]])
+    candidate = torch.tensor([[0.8, 0.1], [0.8, 0.9]])
+    output, selected = route_query_activation(
+        base,
+        candidate,
+        0,
+        "query_positive",
+        torch.tensor([False, True]),
+    )
+    assert selected.tolist() == [False, True]
+    assert torch.allclose(output[:, 0], torch.tensor([0.2, 0.8]))
+
+
+def test_query_positive_blend_scales_only_positive_candidate_gain():
+    base = torch.tensor([[0.2], [0.2], [0.4]])
+    candidate = torch.tensor([[0.6], [0.6], [0.3]])
+    reliability = torch.tensor([0.0, 0.5, 1.0])
+    output, selected = route_query_activation(
+        base,
+        candidate,
+        0,
+        "query_positive_blend",
+        reliability,
+    )
+    assert torch.allclose(output.squeeze(1), torch.tensor([0.2, 0.4, 0.4]))
+    assert selected.tolist() == [False, True, False]
+
+
 def test_precompute_query_scores_supports_discrete_artifact_device():
     class Artifact:
         num_gaussians = 2

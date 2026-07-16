@@ -189,6 +189,97 @@ def visibility_truncate_weights(
     return truncated, retained_mass, keep.sum(dim=1)
 
 
+def signed_segment_ownership(
+    point_ids,
+    point_weights,
+    segment_ids,
+    num_gaussians,
+):
+    """Estimate per-view Gaussian ownership by competition between 2D segments."""
+    if point_ids.ndim != 2 or point_weights.shape != point_ids.shape:
+        raise ValueError("Point IDs and weights must have matching [P, K] shapes")
+    if segment_ids.shape != (point_ids.shape[0],):
+        raise ValueError("Segment IDs must have one entry per pixel")
+    if num_gaussians <= 0:
+        raise ValueError("num_gaussians must be positive")
+
+    device = point_weights.device
+    total_mass = torch.zeros(num_gaussians, dtype=torch.float32, device=device)
+    dominant_mass = torch.zeros_like(total_mass)
+    dominant_segment = torch.full(
+        (num_gaussians,), -1, dtype=torch.long, device=device
+    )
+    valid_pixels = segment_ids >= 0
+    if not valid_pixels.any():
+        return dominant_segment, dominant_mass, total_mass
+
+    sorted_pixels = torch.argsort(segment_ids)
+    sorted_segments = segment_ids[sorted_pixels]
+    valid_start = int(torch.searchsorted(sorted_segments, 0).item())
+    sorted_pixels = sorted_pixels[valid_start:]
+    sorted_segments = sorted_segments[valid_start:]
+    unique_segments, counts = torch.unique_consecutive(
+        sorted_segments, return_counts=True
+    )
+    offsets = torch.cat(
+        (
+            torch.zeros(1, dtype=torch.long, device=device),
+            counts.cumsum(dim=0),
+        )
+    )
+
+    for segment_index, segment in enumerate(unique_segments):
+        start = int(offsets[segment_index].item())
+        end = int(offsets[segment_index + 1].item())
+        rows = sorted_pixels[start:end]
+        ids = point_ids[rows].reshape(-1)
+        weights = point_weights[rows].reshape(-1).float()
+        valid = (ids >= 0) & (ids < num_gaussians) & (weights > 0.0)
+        if not valid.any():
+            continue
+        ids = ids[valid].long()
+        weights = weights[valid]
+        unique_ids, inverse = torch.unique(ids, sorted=True, return_inverse=True)
+        segment_mass = torch.zeros(
+            unique_ids.shape[0], dtype=torch.float32, device=device
+        )
+        segment_mass.index_add_(0, inverse, weights)
+        total_mass.index_add_(0, unique_ids, segment_mass)
+        better = segment_mass > dominant_mass[unique_ids]
+        if better.any():
+            winning_ids = unique_ids[better]
+            dominant_mass[winning_ids] = segment_mass[better]
+            dominant_segment[winning_ids] = segment.long()
+
+    signed_confidence = (
+        (2.0 * dominant_mass - total_mass) / total_mass.clamp_min(1e-8)
+    ).clamp(0.0, 1.0)
+    signed_confidence[total_mass <= 0.0] = 0.0
+    return dominant_segment, signed_confidence, total_mass
+
+
+def apply_signed_segment_ownership(
+    point_ids,
+    point_weights,
+    segment_ids,
+    dominant_segment,
+    signed_confidence,
+):
+    """Keep only a Gaussian's majority segment and scale by its signed margin."""
+    safe_ids = point_ids.clamp_min(0).long()
+    valid = (point_ids >= 0) & (safe_ids < dominant_segment.shape[0])
+    safe_ids = safe_ids.clamp_max(dominant_segment.shape[0] - 1)
+    selected = valid & (
+        dominant_segment[safe_ids] == segment_ids.long().unsqueeze(1)
+    )
+    gates = torch.where(
+        selected,
+        signed_confidence[safe_ids],
+        torch.zeros_like(point_weights, dtype=torch.float32),
+    )
+    return point_weights.float() * gates
+
+
 def mask_interior_confidence(segmentation, distance_pixels, boundary_floor):
     """Return a soft mask-interior confidence without using semantic labels."""
     boundary = np.zeros(segmentation.shape, dtype=bool)
@@ -332,6 +423,14 @@ def main():
     parser.add_argument("--visibility_mass_fraction", type=float, default=1.0)
     parser.add_argument("--visibility_relative_floor", type=float, default=0.0)
     parser.add_argument("--visibility_min_contributors", type=int, default=1)
+    parser.add_argument(
+        "--signed_segment_ownership",
+        action="store_true",
+        help=(
+            "Within each view, let 2D segments compete for every Gaussian and retain "
+            "only positive foreground-vs-background contribution margin."
+        ),
+    )
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--quiet", action="store_true")
@@ -378,6 +477,14 @@ def main():
     )
     if args.surface_responsibility and visibility_truncation:
         raise ValueError("Surface responsibility and visibility truncation are separate probes")
+    if args.signed_segment_ownership and not args.consensus_only:
+        raise ValueError("Signed segment ownership requires --consensus_only")
+    if args.signed_segment_ownership and (
+        args.surface_responsibility or visibility_truncation
+    ):
+        raise ValueError(
+            "Signed ownership, surface responsibility, and visibility truncation are separate probes"
+        )
     safe_state(args.quiet)
     dataset = model_params.extract(args)
     pipe = pipeline_params.extract(args)
@@ -492,6 +599,11 @@ def main():
     visibility_retained_contributors = 0
     visibility_input_contributors = 0
     visibility_pixel_count = 0
+    ownership_gaussian_observations = 0
+    ownership_positive_observations = 0
+    ownership_confidence_sum = 0.0
+    ownership_input_mass = 0.0
+    ownership_retained_mass = 0.0
 
     for view_index, camera in tqdm(indexed_cameras, desc="Caching semantic observations"):
         feature_stem = os.path.join(feature_dir, camera.image_name)
@@ -551,19 +663,71 @@ def main():
                 target_weights = split_weights[split_index]
             flat_ids = render_package["per_pixel_gaussian_ids"].reshape(-1, 100)
             flat_weights = render_package["per_pixel_gaussian_contributions"].reshape(-1, 100)
+            ownership_top_ids = None
+            ownership_top_weights = None
+            dominant_segment = None
+            signed_confidence = None
+            if args.signed_segment_ownership:
+                sampled_indices = torch.from_numpy(sampled_flat).long().cuda()
+                sampled_weights = flat_weights[sampled_indices]
+                ownership_top_weights, ownership_top_indices = torch.topk(
+                    sampled_weights, k=args.topk, dim=1
+                )
+                ownership_top_ids = torch.gather(
+                    flat_ids[sampled_indices], 1, ownership_top_indices
+                ).long()
+                ownership_valid = ownership_top_ids >= 0
+                ownership_top_weights = torch.where(
+                    ownership_valid,
+                    ownership_top_weights.float().clamp_min(0.0),
+                    torch.zeros_like(ownership_top_weights.float()),
+                )
+                dominant_segment, signed_confidence, ownership_total_mass = (
+                    signed_segment_ownership(
+                        ownership_top_ids,
+                        ownership_top_weights,
+                        segment_ids,
+                        num_gaussians,
+                    )
+                )
+                ownership_supported = ownership_total_mass > 0.0
+                ownership_gaussian_observations += int(ownership_supported.sum().item())
+                ownership_positive_observations += int(
+                    (signed_confidence > 0.0).sum().item()
+                )
+                ownership_confidence_sum += float(
+                    signed_confidence[ownership_supported].sum().item()
+                )
+                del sampled_indices, sampled_weights, ownership_top_indices
             for start in range(0, sampled_flat.size, args.consensus_chunk_pixels):
                 stop = min(start + args.consensus_chunk_pixels, sampled_flat.size)
-                flat_chunk = torch.from_numpy(sampled_flat[start:stop]).long().cuda()
-                chunk_ids = flat_ids[flat_chunk]
-                chunk_weights = flat_weights[flat_chunk]
-                top_weights, top_indices = torch.topk(chunk_weights, k=args.topk, dim=1)
-                top_ids = torch.gather(chunk_ids, 1, top_indices).long()
-                valid = top_ids >= 0
-                top_weights = torch.where(
-                    valid,
-                    top_weights.float().clamp_min(0.0),
-                    torch.zeros_like(top_weights.float()),
-                )
+                if ownership_top_ids is not None:
+                    top_ids = ownership_top_ids[start:stop]
+                    top_weights = ownership_top_weights[start:stop]
+                else:
+                    flat_chunk = torch.from_numpy(sampled_flat[start:stop]).long().cuda()
+                    chunk_ids = flat_ids[flat_chunk]
+                    chunk_weights = flat_weights[flat_chunk]
+                    top_weights, top_indices = torch.topk(
+                        chunk_weights, k=args.topk, dim=1
+                    )
+                    top_ids = torch.gather(chunk_ids, 1, top_indices).long()
+                    valid = top_ids >= 0
+                    top_weights = torch.where(
+                        valid,
+                        top_weights.float().clamp_min(0.0),
+                        torch.zeros_like(top_weights.float()),
+                    )
+                if args.signed_segment_ownership:
+                    ownership_input_mass += float(top_weights.sum().item())
+                    top_weights = apply_signed_segment_ownership(
+                        top_ids,
+                        top_weights,
+                        segment_ids[start:stop],
+                        dominant_segment,
+                        signed_confidence,
+                    )
+                    ownership_retained_mass += float(top_weights.sum().item())
                 valid_pixels = top_weights.sum(dim=1) > 1e-8
                 if not valid_pixels.any():
                     continue
@@ -608,6 +772,9 @@ def main():
                     chunk_segments,
                     feature_latents,
                 )
+            del ownership_top_ids, ownership_top_weights
+            if dominant_segment is not None:
+                del dominant_segment, signed_confidence, ownership_total_mass
             del render_package
             torch.cuda.empty_cache()
             continue
@@ -798,6 +965,17 @@ def main():
         ),
         "visibility_retained_contributor_fraction": float(
             visibility_retained_contributors / max(1, visibility_input_contributors)
+        ),
+        "signed_segment_ownership": bool(args.signed_segment_ownership),
+        "ownership_positive_observation_fraction": float(
+            ownership_positive_observations
+            / max(1, ownership_gaussian_observations)
+        ),
+        "ownership_mean_signed_confidence": float(
+            ownership_confidence_sum / max(1, ownership_gaussian_observations)
+        ),
+        "ownership_retained_mass_fraction": float(
+            ownership_retained_mass / max(ownership_input_mass, 1e-12)
         ),
         "max_pixels_per_view": int(args.max_pixels_per_view),
         "max_views": int(args.max_views),

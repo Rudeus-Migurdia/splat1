@@ -315,7 +315,7 @@ class ConsensusFeatureArtifact:
 
     @torch.no_grad()
     def prepare_query_routing(self, clip_model, num_categories, mode, chunk_size=65536):
-        if mode not in {"margin_switch", "margin_positive"}:
+        if mode not in {"margin_switch", "margin_positive", "query_positive"}:
             raise ValueError(f"Unsupported consensus query route: {mode}")
         if self.route_base_features is None:
             raise ValueError("Query routing requires a retained blend-base consensus")
@@ -411,15 +411,41 @@ class ConsensusFeatureArtifact:
         return output
 
 
-def route_query_activation(base_scores, candidate_scores, category_index, mode):
+def route_query_activation(
+    base_scores,
+    candidate_scores,
+    category_index,
+    mode,
+    candidate_mask=None,
+):
     if base_scores.shape != candidate_scores.shape or base_scores.ndim != 2:
         raise ValueError("Query route score tables must have matching [N, C] shapes")
     if not 0 <= category_index < base_scores.shape[1]:
         raise ValueError("category_index is outside the route score table")
-    if mode not in {"margin_switch", "margin_positive"}:
+    if mode not in {
+        "margin_switch",
+        "margin_positive",
+        "query_positive",
+        "query_positive_blend",
+    }:
         raise ValueError(f"Unsupported query route mode: {mode}")
     base_target = base_scores[:, category_index]
     candidate_target = candidate_scores[:, category_index]
+    if mode in {"query_positive", "query_positive_blend"}:
+        selected = candidate_target > base_target
+        if mode == "query_positive_blend":
+            reliability = (
+                candidate_mask.float().clamp(0.0, 1.0)
+                if candidate_mask is not None
+                else torch.ones_like(base_target)
+            )
+            selected = selected & (reliability > 0.0)
+            output = base_target + reliability * (candidate_target - base_target).clamp_min(0.0)
+        else:
+            if candidate_mask is not None:
+                selected = selected & candidate_mask.bool()
+            output = torch.where(selected, candidate_target, base_target)
+        return output.unsqueeze(-1), selected
     if base_scores.shape[1] > 1:
         base_competitors = base_scores.clone()
         candidate_competitors = candidate_scores.clone()
@@ -431,6 +457,8 @@ def route_query_activation(base_scores, candidate_scores, category_index, mode):
         base_margin = base_target
         candidate_margin = candidate_target
     selected = candidate_margin > base_margin
+    if candidate_mask is not None:
+        selected = selected & candidate_mask
     if mode == "margin_switch":
         output = torch.where(selected, candidate_target, base_target)
     else:
@@ -848,7 +876,7 @@ def main():
     )
     parser.add_argument(
         "--consensus_query_route",
-        choices=["none", "margin_switch", "margin_positive"],
+        choices=["none", "margin_switch", "margin_positive", "query_positive"],
         default="none",
     )
     parser.add_argument(
@@ -858,8 +886,19 @@ def main():
     )
     parser.add_argument(
         "--codebook_query_route",
-        choices=["none", "margin_switch", "margin_positive"],
+        choices=[
+            "none",
+            "margin_switch",
+            "margin_positive",
+            "query_positive",
+            "query_positive_blend",
+        ],
         default="none",
+    )
+    parser.add_argument(
+        "--query_route_candidate_mask",
+        default=None,
+        help="Optional training-derived boolean mask or [0,1] reliability for blend routing.",
     )
     parser.add_argument(
         "--semantic_keep_mask",
@@ -943,6 +982,8 @@ def main():
         )
     if args.query_route_base_codebook_dir and not args.codebook_dir:
         raise ValueError("Discrete query routing requires --codebook_dir")
+    if args.query_route_candidate_mask and not args.query_route_base_codebook_dir:
+        raise ValueError("Candidate route mask requires discrete query routing")
     if not 0.0 <= args.consensus_candidate_weight <= 1.0:
         raise ValueError("--consensus_candidate_weight must be in [0, 1]")
     if not 0.0 <= args.group_route_fraction <= 1.0:
@@ -1014,6 +1055,27 @@ def main():
             or query_route_base_codebook.feature_dim != codebook.feature_dim
         ):
             raise ValueError("Discrete query-route codebooks must match")
+    query_route_candidate_mask = None
+    if args.query_route_candidate_mask:
+        route_mask = np.load(args.query_route_candidate_mask)
+        if route_mask.shape != (codebook.num_gaussians,):
+            raise ValueError("Candidate route mask does not match the Gaussian count")
+        route_dtype = (
+            np.float32
+            if args.codebook_query_route == "query_positive_blend"
+            else bool
+        )
+        query_route_candidate_mask = torch.from_numpy(
+            np.asarray(route_mask, dtype=route_dtype)
+        ).to("cuda")
+        if args.codebook_query_route == "query_positive_blend":
+            if not torch.isfinite(query_route_candidate_mask).all():
+                raise ValueError("Candidate route reliability must be finite")
+            if (
+                (query_route_candidate_mask < 0.0).any()
+                or (query_route_candidate_mask > 1.0).any()
+            ):
+                raise ValueError("Candidate route reliability must be in [0, 1]")
     semantic_keep_mask = None
     if args.semantic_keep_mask:
         keep_mask = np.load(args.semantic_keep_mask)
@@ -1096,6 +1158,7 @@ def main():
                 route_candidate_scores,
                 category_index,
                 args.codebook_query_route,
+                query_route_candidate_mask,
             )
             discrete_route_diagnostics[categories[category_index]] = {
                 "candidate_fraction": float(selected.float().mean())
@@ -1233,6 +1296,16 @@ def main():
                 if query_route_base_codebook
                 else None,
                 "codebook_query_route": args.codebook_query_route,
+                "query_route_candidate_mask": os.path.abspath(
+                    args.query_route_candidate_mask
+                )
+                if args.query_route_candidate_mask
+                else None,
+                "query_route_candidate_mask_fraction": float(
+                    query_route_candidate_mask.float().mean()
+                )
+                if query_route_candidate_mask is not None
+                else 1.0,
                 "discrete_route_diagnostics": discrete_route_diagnostics,
                 "hypothesis_dir": sparse_hypothesis.dir if sparse_hypothesis else None,
                 "hypothesis_manifest": sparse_hypothesis.manifest if sparse_hypothesis else None,
