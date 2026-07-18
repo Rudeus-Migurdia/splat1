@@ -162,7 +162,9 @@ def as_frozen_parameter(value, device="cuda"):
 
 
 def load_geometry_checkpoint(gaussians, checkpoint_path, device="cuda"):
-    model_params, checkpoint_iteration = torch.load(checkpoint_path, map_location=device)
+    model_params, checkpoint_iteration = torch.load(
+        checkpoint_path, map_location=device, weights_only=False
+    )
     if len(model_params) == 12:
         (
             active_sh_degree,

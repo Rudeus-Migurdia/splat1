@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT=${ROOT:-/home/anlanfan/Dr-Splat}
 PYTHON_BIN=${PYTHON_BIN:-$ROOT/.venv/bin/python}
 A14_ROOT=${A14_ROOT:-$ROOT/runs/a14_signed_ownership_20260716}
+BASE_ROOT=${BASE_ROOT:-$A14_ROOT}
+BASE_VARIANT=${BASE_VARIANT:-}
 REFERENCE_ROOT=${REFERENCE_ROOT:-$ROOT/runs/a6_novelty_joint32k_20260715}
 RUN_ROOT=${RUN_ROOT:-$ROOT/runs/a14_e8_joint32k_20260716}
 LOG_DIR=${LOG_DIR:-$ROOT/logs/a14_e8_joint32k_20260716}
@@ -21,7 +23,11 @@ export OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 NUMEXPR_NUM_TH
 mkdir -p "$RUN_ROOT" "$LOG_DIR"
 
 base_consensus() {
-  printf '%s\n' "$A14_ROOT/$1/fused_w1p5_t005.pt"
+  if [[ -n "$BASE_VARIANT" ]]; then
+    printf '%s\n' "$BASE_ROOT/$1/$BASE_VARIANT/fused_w1p5_t005.pt"
+  else
+    printf '%s\n' "$BASE_ROOT/$1/fused_w1p5_t005.pt"
+  fi
 }
 
 candidate_consensus() {

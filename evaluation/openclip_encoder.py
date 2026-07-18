@@ -18,7 +18,18 @@ class OpenCLIPNetwork:
             ]
         )
         self.clip_model_type = "ViT-B-16"
-        self.clip_model_pretrained = os.environ.get("OPENCLIP_PRETRAINED", "laion2b_s34b_b88k")
+        configured_checkpoint = os.environ.get("OPENCLIP_PRETRAINED")
+        if configured_checkpoint:
+            self.clip_model_pretrained = os.path.abspath(
+                os.path.expanduser(configured_checkpoint)
+            )
+            if not os.path.isfile(self.clip_model_pretrained):
+                raise FileNotFoundError(
+                    "OPENCLIP_PRETRAINED must point to an existing checkpoint: "
+                    f"{self.clip_model_pretrained}"
+                )
+        else:
+            self.clip_model_pretrained = "laion2b_s34b_b88k"
         self.clip_n_dims = 512
         model, _, _ = open_clip.create_model_and_transforms(
             self.clip_model_type,

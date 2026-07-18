@@ -76,7 +76,10 @@ def leave_one_out_candidate_support(labels, candidate_mask):
 
 
 def load_geometry(checkpoint_path, expected_count):
-    model_params, iteration = torch.load(checkpoint_path, map_location="cpu")
+    # Geometry checkpoints predate PyTorch 2.6 and contain trusted NumPy metadata.
+    model_params, iteration = torch.load(
+        checkpoint_path, map_location="cpu", weights_only=False
+    )
     if len(model_params) not in (12, 13):
         raise ValueError("Unsupported geometry checkpoint tuple")
     xyz = model_params[1].detach().float().numpy()

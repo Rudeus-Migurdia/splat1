@@ -32,7 +32,9 @@ def as_frozen_parameter(value):
 
 
 def load_checkpoint_into_gaussians(gaussians, checkpoint_path):
-    model_params, checkpoint_iteration = torch.load(checkpoint_path, map_location="cuda")
+    model_params, checkpoint_iteration = torch.load(
+        checkpoint_path, map_location="cuda", weights_only=False
+    )
     if len(model_params) == 13:
         (
             active_sh_degree,

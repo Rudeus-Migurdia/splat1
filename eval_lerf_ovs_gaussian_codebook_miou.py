@@ -26,7 +26,13 @@ from gaussian_renderer import render
 from lerf_ovs_paper_protocol import PROTOCOL_NAME
 from scene import GaussianModel, Scene
 from semantic_hypothesis_routing import (
+    blend_contrastive_group_hypotheses,
+    blend_group_hypotheses,
+    blend_dual_code_hypotheses,
     blend_sparse_hypothesis,
+    fuse_calibrated_hierarchical_memory,
+    fuse_equal_query_tokens,
+    fuse_hierarchical_semantic_memory,
     route_group_hypotheses,
 )
 from semantic_field_utils import load_geometry_checkpoint
@@ -504,22 +510,50 @@ def precompute_artifact_query_scores(
 class SparseSemanticHypothesis:
     def __init__(self, artifact_dir, device="cuda"):
         self.dir = os.path.abspath(artifact_dir)
+        self.device = torch.device(device)
         with open(os.path.join(self.dir, "manifest.json")) as source:
             self.manifest = json.load(source)
-        if self.manifest.get("representation") != "sparse_continuous_semantic_hypothesis":
+        representation = self.manifest.get("representation")
+        supported = {
+            "sparse_continuous_semantic_hypothesis",
+            "sparse_quantized_semantic_hypothesis",
+        }
+        if representation not in supported:
             raise ValueError("Unsupported sparse semantic hypothesis artifact")
         self.num_gaussians = int(self.manifest["num_gaussians"])
         self.feature_dim = int(self.manifest["feature_dim"])
         self.point_ids = torch.from_numpy(
             np.load(os.path.join(self.dir, self.manifest["point_ids"])).astype(np.int64)
-        ).to(device)
-        self.features = torch.from_numpy(
-            np.load(os.path.join(self.dir, self.manifest["features"])).astype(np.float32)
-        ).to(device)
+        ).to(self.device)
+        if representation == "sparse_continuous_semantic_hypothesis":
+            feature_table = np.load(
+                os.path.join(self.dir, self.manifest["features"])
+            ).astype(np.float32)
+        else:
+            codebook = np.load(
+                os.path.join(self.dir, self.manifest["codebook"])
+            ).astype(np.float32)
+            code_ids = np.load(
+                os.path.join(self.dir, self.manifest["code_ids"])
+            ).astype(np.int64)
+            if codebook.ndim != 2 or codebook.shape[1] != self.feature_dim:
+                raise ValueError("Sparse hypothesis codebook has an invalid shape")
+            if code_ids.shape != tuple(self.point_ids.shape):
+                raise ValueError("Sparse hypothesis code IDs do not match point IDs")
+            if code_ids.size and (code_ids.min() < 0 or code_ids.max() >= codebook.shape[0]):
+                raise ValueError("Sparse hypothesis code IDs are out of bounds")
+            feature_table = codebook[code_ids]
+        self.features = torch.from_numpy(feature_table).to(self.device)
         self.reliability = torch.from_numpy(
             np.load(os.path.join(self.dir, self.manifest["reliability"])).astype(np.float32)
             / 255.0
-        ).to(device)
+        ).to(self.device)
+        if self.point_ids.numel() and (
+            int(self.point_ids.min()) < 0
+            or int(self.point_ids.max()) >= self.num_gaussians
+            or torch.unique(self.point_ids).numel() != self.point_ids.numel()
+        ):
+            raise ValueError("Sparse hypothesis point IDs are invalid or duplicated")
         if self.features.shape != (self.point_ids.numel(), self.feature_dim):
             raise ValueError("Sparse hypothesis feature table does not match point IDs")
         if self.reliability.shape != self.point_ids.shape:
@@ -588,14 +622,93 @@ class GroupHierarchy:
         if self.artifact_dir:
             with open(os.path.join(self.artifact_dir, "manifest.json")) as source:
                 manifest = json.load(source)
-            if manifest.get("representation") != "compact_group_hierarchy":
+            representation = manifest.get("representation")
+            if representation not in {
+                "compact_group_hierarchy",
+                "shared_codebook_group_hierarchy",
+                "hierarchical_independent_group_codebooks",
+            }:
                 raise ValueError("Unsupported compact group hierarchy artifact")
-            self.codebook_path = os.path.join(
-                self.artifact_dir,
-                manifest["group_codebook"],
-            )
             self.assignments_path = None
-            codebook = np.load(self.codebook_path).astype(np.float32)
+            independent_level_codebooks = (
+                representation == "hierarchical_independent_group_codebooks"
+            )
+            shared_group_codes = representation == "shared_codebook_group_hierarchy"
+            group_levels = None
+            if independent_level_codebooks:
+                self.codebook_path = self.artifact_dir
+                semantic_ids = np.load(
+                    os.path.join(self.artifact_dir, manifest["group_semantic_code_ids"])
+                ).astype(np.int64)
+                if semantic_ids.ndim != 2 or semantic_ids.shape[1] != 1:
+                    raise ValueError("Independent hierarchical semantic IDs must have shape [G, 1]")
+                group_levels = np.load(
+                    os.path.join(self.artifact_dir, manifest["group_level"])
+                ).astype(np.int64)
+                if group_levels.shape != (semantic_ids.shape[0],):
+                    raise ValueError("Independent hierarchical group levels must match semantic tokens")
+                semantic_invalid = int(manifest["semantic_invalid_id"])
+                codebook = np.zeros(
+                    (semantic_ids.shape[0], int(manifest["feature_dim"])),
+                    dtype=np.float32,
+                )
+                declared_levels = manifest.get("level_codebooks", [])
+                if len(declared_levels) != 4:
+                    raise ValueError("Hierarchical semantic memory requires four declared level codebooks")
+                for level_spec in declared_levels:
+                    level = int(level_spec["level"])
+                    level_mask = group_levels == level
+                    level_codebook = np.load(
+                        os.path.join(self.artifact_dir, level_spec["codebook"])
+                    ).astype(np.float32)
+                    local_ids = semantic_ids[level_mask, 0]
+                    if np.any(local_ids == semantic_invalid):
+                        raise ValueError("Resident hierarchical tokens must have a local semantic ID")
+                    if local_ids.size and (
+                        int(local_ids.min()) < 0 or int(local_ids.max()) >= level_codebook.shape[0]
+                    ):
+                        raise ValueError("Hierarchical semantic IDs exceed their level codebook")
+                    codebook[level_mask] = level_codebook[local_ids]
+                atom_codebook = np.zeros_like(codebook)
+            else:
+                self.codebook_path = os.path.join(
+                    self.artifact_dir, manifest["group_codebook"]
+                )
+            if shared_group_codes:
+                shared = np.load(self.codebook_path).astype(np.float32)
+                semantic_ids = np.load(
+                    os.path.join(self.artifact_dir, manifest["group_semantic_code_ids"])
+                ).astype(np.int64)
+                semantic_invalid = int(manifest["semantic_invalid_id"])
+                semantic_valid = semantic_ids != semantic_invalid
+                safe_ids = np.where(semantic_valid, semantic_ids, 0)
+                if semantic_valid.any() and int(safe_ids[semantic_valid].max()) >= shared.shape[0]:
+                    raise ValueError("Group semantic IDs exceed the shared vocabulary")
+                codebook = (
+                    shared[safe_ids] * semantic_valid[..., None]
+                ).sum(axis=1)
+                atom_name = manifest.get("group_semantic_atom_code_ids")
+                if atom_name:
+                    atom_ids = np.load(
+                        os.path.join(self.artifact_dir, atom_name)
+                    ).astype(np.int64)
+                    atom_invalid = int(
+                        manifest.get("semantic_atom_invalid_id", semantic_invalid)
+                    )
+                    atom_valid = atom_ids != atom_invalid
+                    atom_safe = np.where(atom_valid, atom_ids, 0)
+                    if atom_ids.shape != semantic_ids.shape:
+                        raise ValueError("Semantic atom IDs must match group semantic IDs")
+                    if atom_valid.any() and int(atom_safe[atom_valid].max()) >= shared.shape[0]:
+                        raise ValueError("Semantic atom IDs exceed the shared vocabulary")
+                    atom_codebook = (
+                        shared[atom_safe] * atom_valid[..., None]
+                    ).sum(axis=1)
+                else:
+                    atom_codebook = np.zeros_like(codebook)
+            elif not independent_level_codebooks:
+                codebook = np.load(self.codebook_path).astype(np.float32)
+                atom_codebook = np.zeros_like(codebook)
             point_ids = np.load(
                 os.path.join(self.artifact_dir, manifest["point_group_ids"])
             ).astype(np.int64)
@@ -604,6 +717,19 @@ class GroupHierarchy:
             point_scores = np.load(
                 os.path.join(self.artifact_dir, manifest["point_group_weights"])
             ).astype(np.float32) / 255.0
+            competitor_name = manifest.get("point_competitor_ids")
+            if competitor_name:
+                competitor_ids = np.load(
+                    os.path.join(self.artifact_dir, competitor_name)
+                ).astype(np.int64)
+                competitor_invalid = int(
+                    manifest.get("competitor_invalid_id", invalid_id)
+                )
+                competitor_ids[competitor_ids == competitor_invalid] = -1
+                if competitor_ids.shape != point_ids.shape:
+                    raise ValueError("Competitor IDs must match positive group IDs")
+            else:
+                competitor_ids = np.full_like(point_ids, -1)
             self._storage_bytes = int(manifest["storage"]["total_semantic_bytes"])
             entropy_name = manifest.get("point_group_entropy")
             self.point_entropy = (
@@ -614,6 +740,18 @@ class GroupHierarchy:
                 if entropy_name
                 else torch.zeros_like(torch.from_numpy(point_scores)).to(device)
             )
+            point_reliability_name = manifest.get("point_group_reliability")
+            self.point_reliability = (
+                torch.from_numpy(
+                    np.load(
+                        os.path.join(self.artifact_dir, point_reliability_name)
+                    ).astype(np.float32)
+                ).to(device)
+                if point_reliability_name
+                else torch.ones_like(torch.from_numpy(point_scores)).to(device)
+            )
+            if self.point_reliability.shape != self.point_entropy.shape:
+                raise ValueError("Point reliability must match group ID slots")
             reliability_name = manifest.get("group_reliability")
             self.group_reliability = (
                 torch.from_numpy(
@@ -633,26 +771,53 @@ class GroupHierarchy:
                 self.assignments_path
             )
             self.point_entropy = torch.zeros_like(torch.from_numpy(point_scores)).to(device)
+            self.point_reliability = torch.ones_like(
+                torch.from_numpy(point_scores)
+            ).to(device)
             self.group_reliability = torch.ones(
                 codebook.shape[0], dtype=torch.float32, device=device
             )
+            competitor_ids = np.full_like(point_ids, -1)
+            atom_codebook = np.zeros_like(codebook)
+            group_levels = None
         codebook /= np.maximum(np.linalg.norm(codebook, axis=-1, keepdims=True), 1e-8)
         self.codebook = torch.from_numpy(codebook).to(device)
+        atom_codebook /= np.maximum(
+            np.linalg.norm(atom_codebook, axis=-1, keepdims=True), 1e-8
+        )
+        self.atom_codebook = torch.from_numpy(atom_codebook).to(device)
         self.point_ids = torch.from_numpy(point_ids).to(device)
         self.point_scores = torch.from_numpy(point_scores).to(device)
+        self.competitor_ids = torch.from_numpy(competitor_ids).to(device)
+        if group_levels is None:
+            group_levels = np.zeros(codebook.shape[0], dtype=np.int64)
+        self.group_levels = torch.from_numpy(group_levels).to(device)
         if self.point_ids.shape != self.point_scores.shape:
             raise ValueError("Group IDs and scores must have matching shapes")
         valid = self.point_ids >= 0
         if valid.any() and int(self.point_ids[valid].max()) >= self.codebook.shape[0]:
             raise ValueError("Group assignments reference IDs outside the shared codebook")
+        competitor_valid = self.competitor_ids >= 0
+        if competitor_valid.any() and int(self.competitor_ids[competitor_valid].max()) >= self.codebook.shape[0]:
+            raise ValueError("Competitor assignments reference IDs outside the shared codebook")
+        if self.group_levels.shape != (self.codebook.shape[0],):
+            raise ValueError("Group levels must match the decoded group codebook")
         self.feature_agreement = None
         self.query_activations = None
+        self.atom_query_activations = None
 
     @torch.no_grad()
     def set_query_activations(self, clip_model, num_categories):
         self.query_activations = torch.cat(
             [
                 clip_model.get_activation(self.codebook, category_index).float()
+                for category_index in range(num_categories)
+            ],
+            dim=1,
+        )
+        self.atom_query_activations = torch.cat(
+            [
+                clip_model.get_activation(self.atom_codebook, category_index).float()
                 for category_index in range(num_categories)
             ],
             dim=1,
@@ -698,6 +863,38 @@ class GroupHierarchy:
         return gathered, scores, valid
 
     @torch.no_grad()
+    def candidate_competitor_activation(self, clip_model, category_index, topk):
+        code_activation = (
+            self.query_activations[:, category_index]
+            if self.query_activations is not None
+            else clip_model.get_activation(self.codebook, category_index).squeeze(-1)
+        )
+        point_ids = (
+            self.competitor_ids[:, :topk]
+            if topk > 0
+            else self.competitor_ids
+        )
+        valid = point_ids >= 0
+        gathered = code_activation[point_ids.clamp_min(0)]
+        return torch.where(valid, gathered, torch.zeros_like(gathered)), valid
+
+    @torch.no_grad()
+    def candidate_atom_activation(self, clip_model, category_index, topk):
+        atom_activation = (
+            self.atom_query_activations[:, category_index]
+            if self.atom_query_activations is not None
+            else clip_model.get_activation(
+                self.atom_codebook, category_index
+            ).squeeze(-1)
+        )
+        point_ids = self.point_ids[:, :topk] if topk > 0 else self.point_ids
+        valid = (point_ids >= 0) & (
+            self.atom_codebook.norm(dim=-1)[point_ids.clamp_min(0)] > 0.0
+        )
+        gathered = atom_activation[point_ids.clamp_min(0)]
+        return torch.where(valid, gathered, torch.zeros_like(gathered)), valid
+
+    @torch.no_grad()
     def candidate_query_specificity(self, category_index, topk):
         if self.query_activations is None:
             raise ValueError("Query activations must be initialized before margin routing")
@@ -718,10 +915,27 @@ class GroupHierarchy:
         point_ids = self.point_ids[:, :topk] if topk > 0 else self.point_ids
         memberships = self.point_scores[:, :topk] if topk > 0 else self.point_scores
         entropy = self.point_entropy[:, :topk] if topk > 0 else self.point_entropy
+        point_reliability = (
+            self.point_reliability[:, :topk]
+            if topk > 0
+            else self.point_reliability
+        )
         valid = point_ids >= 0
         track_reliability = self.group_reliability[point_ids.clamp_min(0)]
-        reliability = memberships * track_reliability * (1.0 - entropy)
+        reliability = (
+            memberships
+            * point_reliability.clamp(0.0, 1.0)
+            * track_reliability
+            * (1.0 - entropy)
+        )
         return torch.where(valid, reliability, torch.zeros_like(reliability))
+
+    @torch.no_grad()
+    def candidate_levels(self, topk):
+        point_ids = self.point_ids[:, :topk] if topk > 0 else self.point_ids
+        valid = point_ids >= 0
+        levels = self.group_levels[point_ids.clamp_min(0)]
+        return torch.where(valid, levels, torch.full_like(levels, -1))
 
     @torch.no_grad()
     def point_activation(
@@ -813,10 +1027,30 @@ def main():
     parser.add_argument("--group_score_power", type=float, default=1.0)
     parser.add_argument(
         "--group_readout",
-        choices=["residual", "hypothesis"],
+        choices=[
+            "residual",
+            "hypothesis",
+            "hypothesis_blend",
+            "contrastive_blend",
+            "dual_agreement",
+            "dual_contrastive",
+            "hierarchical_memory",
+            "calibrated_hierarchical_memory",
+            "equal_query_softmax",
+            "equal_query_max",
+        ],
         default="residual",
         help="Keep group semantics separate at query time or use the legacy residual.",
     )
+    parser.add_argument(
+        "--group_query_temperature",
+        type=float,
+        default=0.10,
+        help="Temperature for query-aware fusion across resident hierarchy levels.",
+    )
+    parser.add_argument("--group_level_margin_threshold", type=float, default=0.25)
+    parser.add_argument("--group_level_margin_temperature", type=float, default=0.10)
+    parser.add_argument("--group_competitor_weight", type=float, default=1.0)
     parser.add_argument("--group_route_fraction", type=float, default=1.0)
     parser.add_argument(
         "--group_route_priority",
@@ -988,6 +1222,14 @@ def main():
         raise ValueError("--consensus_candidate_weight must be in [0, 1]")
     if not 0.0 <= args.group_route_fraction <= 1.0:
         raise ValueError("--group_route_fraction must be in [0, 1]")
+    if args.group_competitor_weight < 0.0:
+        raise ValueError("--group_competitor_weight must be non-negative")
+    if args.group_query_temperature <= 0.0:
+        raise ValueError("--group_query_temperature must be positive")
+    if args.group_level_margin_threshold < 0.0:
+        raise ValueError("--group_level_margin_threshold must be non-negative")
+    if args.group_level_margin_temperature <= 0.0:
+        raise ValueError("--group_level_margin_temperature must be positive")
     if args.evaluation_protocol == PROTOCOL_NAME:
         if args.score_calibration != "none":
             raise ValueError("Paper 3D-selection evaluation forbids score calibration")
@@ -1145,7 +1387,10 @@ def main():
         )
     if sparse_hypothesis is not None:
         sparse_hypothesis.set_query_activations(clip_model, len(categories))
-    if group_hierarchy is not None and "margin" in args.group_route_priority:
+    if group_hierarchy is not None and (
+        "margin" in args.group_route_priority
+        or args.group_readout in {"dual_agreement", "dual_contrastive"}
+    ):
         group_hierarchy.set_query_activations(clip_model, len(categories))
     background = torch.zeros(3, dtype=torch.float32, device="cuda")
     thresholds = sorted(set(args.thresholds))
@@ -1197,7 +1442,17 @@ def main():
                     specificity,
                 )
             route_diagnostics[categories[category_index]] = diagnostics
-        elif group_hierarchy is not None and args.group_readout == "hypothesis":
+        elif group_hierarchy is not None and args.group_readout in {
+            "hypothesis",
+            "hypothesis_blend",
+            "contrastive_blend",
+            "dual_agreement",
+            "dual_contrastive",
+            "hierarchical_memory",
+            "calibrated_hierarchical_memory",
+            "equal_query_softmax",
+            "equal_query_max",
+        }:
             candidate_scores, memberships, valid = group_hierarchy.candidate_activation(
                 clip_model,
                 category_index,
@@ -1213,19 +1468,107 @@ def main():
             )
             candidate_reliability = (
                 group_hierarchy.candidate_reliability(args.group_topk)
-                if "reliability" in args.group_route_priority
+                if (
+                    "reliability" in args.group_route_priority
+                    or args.group_readout == "hypothesis_blend"
+                    or args.group_readout == "hierarchical_memory"
+                    or args.group_readout == "calibrated_hierarchical_memory"
+                    or args.group_readout == "equal_query_softmax"
+                    or args.group_readout == "equal_query_max"
+                )
                 else None
             )
-            activation, diagnostics = route_group_hypotheses(
-                activation,
-                candidate_scores,
-                memberships,
-                valid,
-                args.group_route_fraction,
-                args.group_route_priority,
-                query_specificity,
-                candidate_reliability,
-            )
+            if args.group_readout in {"dual_agreement", "dual_contrastive"}:
+                atom_scores, atom_valid = group_hierarchy.candidate_atom_activation(
+                    clip_model, category_index, args.group_topk
+                )
+                competitor_scores, competitor_valid = (
+                    group_hierarchy.candidate_competitor_activation(
+                        clip_model, category_index, args.group_topk
+                    )
+                )
+                dual_valid = valid & atom_valid
+                activation, diagnostics = blend_dual_code_hypotheses(
+                    activation,
+                    atom_scores,
+                    candidate_scores,
+                    competitor_scores,
+                    memberships,
+                    candidate_reliability,
+                    dual_valid,
+                    competitor_valid,
+                    args.group_readout == "dual_contrastive",
+                )
+            elif args.group_readout == "contrastive_blend":
+                competitor_scores, competitor_valid = (
+                    group_hierarchy.candidate_competitor_activation(
+                        clip_model,
+                        category_index,
+                        args.group_topk,
+                    )
+                )
+                activation, diagnostics = blend_contrastive_group_hypotheses(
+                    activation,
+                    candidate_scores,
+                    competitor_scores,
+                    memberships,
+                    candidate_reliability,
+                    valid,
+                    competitor_valid,
+                    args.group_competitor_weight,
+                )
+            elif args.group_readout == "hypothesis_blend":
+                activation, diagnostics = blend_group_hypotheses(
+                    activation,
+                    candidate_scores,
+                    memberships,
+                    candidate_reliability,
+                    valid,
+                )
+            elif args.group_readout == "hierarchical_memory":
+                activation, diagnostics = fuse_hierarchical_semantic_memory(
+                    activation,
+                    candidate_scores,
+                    memberships,
+                    candidate_reliability,
+                    valid,
+                    args.group_query_temperature,
+                    group_hierarchy.candidate_levels(args.group_topk),
+                )
+            elif args.group_readout == "calibrated_hierarchical_memory":
+                activation, diagnostics = fuse_calibrated_hierarchical_memory(
+                    activation,
+                    candidate_scores,
+                    memberships,
+                    candidate_reliability,
+                    valid,
+                    args.group_query_temperature,
+                    group_hierarchy.candidate_levels(args.group_topk),
+                    args.group_level_margin_threshold,
+                    args.group_level_margin_temperature,
+                )
+            elif args.group_readout in {"equal_query_softmax", "equal_query_max"}:
+                activation, diagnostics = fuse_equal_query_tokens(
+                    activation,
+                    candidate_scores,
+                    memberships,
+                    candidate_reliability,
+                    valid,
+                    args.group_query_temperature,
+                    group_hierarchy.candidate_levels(args.group_topk),
+                    hard=args.group_readout == "equal_query_max",
+                )
+            else:
+                activation, diagnostics = route_group_hypotheses(
+                    activation,
+                    candidate_scores,
+                    memberships,
+                    valid,
+                    args.group_route_fraction,
+                    args.group_route_priority,
+                    query_specificity,
+                    candidate_reliability,
+                )
             route_diagnostics[categories[category_index]] = diagnostics
         elif group_hierarchy is not None and args.rgr_alpha > 0.0:
             group_activation, confidence = group_hierarchy.point_activation(
@@ -1323,6 +1666,10 @@ def main():
                 "point_gate_power": float(args.point_gate_power),
                 "group_membership_confidence": bool(args.group_membership_confidence),
                 "group_readout": args.group_readout,
+                "group_query_temperature": float(args.group_query_temperature),
+                "group_level_margin_threshold": float(args.group_level_margin_threshold),
+                "group_level_margin_temperature": float(args.group_level_margin_temperature),
+                "group_competitor_weight": float(args.group_competitor_weight),
                 "group_route_fraction": float(args.group_route_fraction),
                 "group_route_priority": args.group_route_priority,
                 "route_diagnostics": route_diagnostics,
@@ -1487,6 +1834,10 @@ def main():
         "point_gate_floor": float(args.point_gate_floor),
         "point_gate_power": float(args.point_gate_power),
         "group_readout": args.group_readout,
+        "group_query_temperature": float(args.group_query_temperature),
+        "group_level_margin_threshold": float(args.group_level_margin_threshold),
+        "group_level_margin_temperature": float(args.group_level_margin_temperature),
+        "group_competitor_weight": float(args.group_competitor_weight),
         "group_route_fraction": float(args.group_route_fraction),
         "group_route_priority": args.group_route_priority,
         "route_diagnostics": route_diagnostics,

@@ -104,15 +104,23 @@ def encode_feature_table(codec, feature_path, device, batch_size=4096):
     return torch.cat(latents, dim=0)
 
 
-def aggregate_view_observations(point_ids, point_weights, segment_ids, feature_latents):
+def aggregate_view_observations(
+    point_ids,
+    point_weights,
+    segment_ids,
+    feature_latents,
+    return_pixel_indices=True,
+):
     flat_ids = point_ids.reshape(-1)
     flat_weights = point_weights.reshape(-1)
     valid = (flat_ids >= 0) & (flat_weights > 0)
     valid_ids = flat_ids[valid].long()
     unique_ids, inverse = torch.unique(valid_ids, sorted=True, return_inverse=True)
-    pixel_aggregate_indices = torch.full_like(flat_ids, -1, dtype=torch.long)
-    pixel_aggregate_indices[valid] = inverse
-    pixel_aggregate_indices = pixel_aggregate_indices.reshape_as(point_ids)
+    pixel_aggregate_indices = None
+    if return_pixel_indices:
+        pixel_aggregate_indices = torch.full_like(flat_ids, -1, dtype=torch.long)
+        pixel_aggregate_indices[valid] = inverse
+        pixel_aggregate_indices = pixel_aggregate_indices.reshape_as(point_ids)
 
     repeated_targets = feature_latents[segment_ids.long()].unsqueeze(1).expand(
         -1, point_ids.shape[1], -1
@@ -126,6 +134,42 @@ def aggregate_view_observations(point_ids, point_weights, segment_ids, feature_l
     )
     aggregate_weights.index_add_(0, inverse, valid_weights)
     aggregate_sums.index_add_(0, inverse, repeated_targets * valid_weights.unsqueeze(-1))
+    return unique_ids, aggregate_weights, aggregate_sums, pixel_aggregate_indices
+
+
+def aggregate_owned_view_observations(
+    point_ids,
+    point_weights,
+    dominant_segment,
+    feature_latents,
+    return_pixel_indices=False,
+):
+    """Aggregate a signed-ownership view without expanding a PxKxD tensor."""
+    if point_ids.shape != point_weights.shape or point_ids.ndim != 2:
+        raise ValueError("Point IDs and weights must have matching [P, K] shapes")
+    flat_ids = point_ids.reshape(-1)
+    flat_weights = point_weights.reshape(-1).float()
+    valid = (flat_ids >= 0) & (flat_weights > 0.0)
+    valid_ids = flat_ids[valid].long()
+    unique_ids, inverse = torch.unique(valid_ids, sorted=True, return_inverse=True)
+    aggregate_weights = torch.zeros(
+        unique_ids.shape[0], dtype=torch.float32, device=point_ids.device
+    )
+    aggregate_weights.index_add_(0, inverse, flat_weights[valid])
+    winning_segments = dominant_segment[unique_ids]
+    if (winning_segments < 0).any() or (
+        winning_segments >= feature_latents.shape[0]
+    ).any():
+        raise ValueError("Owned Gaussian references an invalid segment feature")
+    aggregate_sums = (
+        feature_latents[winning_segments.long()].float()
+        * aggregate_weights.unsqueeze(-1)
+    )
+    pixel_aggregate_indices = None
+    if return_pixel_indices:
+        pixel_aggregate_indices = torch.full_like(flat_ids, -1, dtype=torch.long)
+        pixel_aggregate_indices[valid] = inverse
+        pixel_aggregate_indices = pixel_aggregate_indices.reshape_as(point_ids)
     return unique_ids, aggregate_weights, aggregate_sums, pixel_aggregate_indices
 
 
@@ -211,7 +255,7 @@ def signed_segment_ownership(
     )
     valid_pixels = segment_ids >= 0
     if not valid_pixels.any():
-        return dominant_segment, dominant_mass, total_mass
+        return dominant_segment, dominant_mass, dominant_mass, total_mass
 
     sorted_pixels = torch.argsort(segment_ids)
     sorted_segments = segment_ids[sorted_pixels]
@@ -255,7 +299,170 @@ def signed_segment_ownership(
         (2.0 * dominant_mass - total_mass) / total_mass.clamp_min(1e-8)
     ).clamp(0.0, 1.0)
     signed_confidence[total_mass <= 0.0] = 0.0
-    return dominant_segment, signed_confidence, total_mass
+    return dominant_segment, signed_confidence, dominant_mass, total_mass
+
+
+def _distribution_kl(distribution, reference):
+    valid = distribution > 0.0
+    return (
+        distribution[valid]
+        * (
+            distribution[valid].log()
+            - reference[valid].clamp_min(1e-20).log()
+        )
+    ).sum()
+
+
+def kl_constrained_importance_ratios(
+    behavior,
+    utility,
+    temperature=1.0,
+    max_kl=0.02,
+    ratio_clip=5.0,
+):
+    """Exponentially tilt a distribution inside a KL trust region."""
+    if behavior.ndim != 1 or utility.shape != behavior.shape:
+        raise ValueError("Behavior and utility must have matching vector shapes")
+    if temperature <= 0.0 or max_kl < 0.0 or ratio_clip < 1.0:
+        raise ValueError("Temperature/KL/ratio constraints are invalid")
+    valid = behavior > 0.0
+    if not valid.any():
+        return torch.ones_like(behavior), torch.zeros((), device=behavior.device)
+    behavior = behavior.float().clamp_min(0.0)
+    behavior = behavior / behavior.sum().clamp_min(1e-20)
+    logits = utility.float() / temperature
+    logits = logits - logits[valid].max()
+    target = behavior * torch.exp(logits.clamp(-30.0, 30.0))
+    target = target / target.sum().clamp_min(1e-20)
+
+    target_kl = _distribution_kl(target, behavior)
+    if max_kl == 0.0:
+        target = behavior
+    elif float(target_kl) > max_kl:
+        low, high = 0.0, 1.0
+        for _ in range(32):
+            amount = 0.5 * (low + high)
+            candidate = (1.0 - amount) * behavior + amount * target
+            if float(_distribution_kl(candidate, behavior)) <= max_kl:
+                low = amount
+            else:
+                high = amount
+        target = (1.0 - low) * behavior + low * target
+
+    ratios = torch.ones_like(behavior)
+    ratios[valid] = target[valid] / behavior[valid].clamp_min(1e-20)
+    maximum_ratio = float(ratios[valid].max())
+    if maximum_ratio > ratio_clip:
+        amount = (ratio_clip - 1.0) / max(maximum_ratio - 1.0, 1e-20)
+        target = (1.0 - amount) * behavior + amount * target
+        ratios[valid] = target[valid] / behavior[valid].clamp_min(1e-20)
+    return ratios, _distribution_kl(target, behavior)
+
+
+def segment_view_importance(
+    gaussian_segment_ids,
+    gaussian_masses,
+    segment_features,
+    reference_features,
+    reference_split_weights,
+    reference_total_weights,
+    temperature=1.0,
+    max_kl=0.02,
+    ratio_clip=5.0,
+    information_weight=0.0,
+):
+    """Score one view's segments using opposite-split agreement and support gain."""
+    count = gaussian_segment_ids.numel()
+    expected_vectors = (count, segment_features.shape[1])
+    if gaussian_masses.shape != (count,):
+        raise ValueError("Gaussian masses must match segment assignments")
+    if reference_features.shape != expected_vectors:
+        raise ValueError("Reference features must match Gaussian observations")
+    if reference_split_weights.shape != (count,) or reference_total_weights.shape != (
+        count,
+    ):
+        raise ValueError("Reference weights must match Gaussian observations")
+    if information_weight < 0.0:
+        raise ValueError("Information weight must be non-negative")
+
+    num_segments = int(segment_features.shape[0])
+    ratios = torch.ones(num_segments, dtype=torch.float32, device=segment_features.device)
+    valid = (
+        (gaussian_segment_ids >= 0)
+        & (gaussian_segment_ids < num_segments)
+        & (gaussian_masses > 0.0)
+    )
+    if not valid.any():
+        return ratios, {
+            "kl": 0.0,
+            "effective_segments": 0.0,
+            "max_ratio": 1.0,
+            "behavior_entropy": 0.0,
+            "target_entropy": 0.0,
+            "mean_agreement": 1.0,
+            "mean_split_reliability": 0.0,
+            "mean_information_gain": 0.0,
+            "total_mass": 0.0,
+        }
+
+    ids = gaussian_segment_ids[valid].long()
+    masses = gaussian_masses[valid].float()
+    references = F.normalize(reference_features[valid].float(), dim=-1)
+    split_weights = reference_split_weights[valid].float().clamp_min(0.0)
+    total_weights = reference_total_weights[valid].float().clamp_min(0.0)
+    segment_mass = torch.zeros(num_segments, dtype=torch.float32, device=ids.device)
+    segment_mass.index_add_(0, ids, masses)
+    active = segment_mass > 0.0
+    behavior = segment_mass / segment_mass.sum().clamp_min(1e-20)
+
+    observations = F.normalize(segment_features[ids].float(), dim=-1)
+    reference_valid = (split_weights > 0.0) & (references.norm(dim=-1) > 0.0)
+    agreement_values = F.cosine_similarity(observations, references, dim=-1).clamp(
+        0.0, 1.0
+    )
+    reliable_mass = masses * reference_valid.float()
+    segment_reliable_mass = torch.zeros_like(segment_mass)
+    segment_agreement_sum = torch.zeros_like(segment_mass)
+    segment_reliable_mass.index_add_(0, ids, reliable_mass)
+    segment_agreement_sum.index_add_(0, ids, reliable_mass * agreement_values)
+    split_reliability = segment_reliable_mass / segment_mass.clamp_min(1e-20)
+    observed_agreement = segment_agreement_sum / segment_reliable_mass.clamp_min(1e-20)
+    agreement = (
+        split_reliability * observed_agreement + (1.0 - split_reliability)
+    ).clamp(1e-4, 1.0)
+
+    prior_without_view = (total_weights - masses).clamp_min(1e-6)
+    information_values = torch.log1p(masses / prior_without_view)
+    segment_information_sum = torch.zeros_like(segment_mass)
+    segment_information_sum.index_add_(0, ids, masses * information_values)
+    information = segment_information_sum / segment_mass.clamp_min(1e-20)
+    if active.any():
+        information = information / information[active].max().clamp_min(1e-8)
+    utility = agreement.log() + (
+        information_weight * split_reliability * agreement * information
+    )
+    ratios, kl = kl_constrained_importance_ratios(
+        behavior,
+        utility,
+        temperature=temperature,
+        max_kl=max_kl,
+        ratio_clip=ratio_clip,
+    )
+    target = behavior * ratios
+    target = target / target.sum().clamp_min(1e-20)
+    behavior_entropy = -(behavior[active] * behavior[active].log()).sum()
+    target_entropy = -(target[active] * target[active].clamp_min(1e-20).log()).sum()
+    return ratios, {
+        "kl": float(kl),
+        "effective_segments": float(1.0 / target.square().sum().clamp_min(1e-20)),
+        "max_ratio": float(ratios[active].max()),
+        "behavior_entropy": float(behavior_entropy),
+        "target_entropy": float(target_entropy),
+        "mean_agreement": float((behavior * agreement).sum()),
+        "mean_split_reliability": float((behavior * split_reliability).sum()),
+        "mean_information_gain": float((behavior * information).sum()),
+        "total_mass": float(segment_mass.sum()),
+    }
 
 
 def apply_signed_segment_ownership(
@@ -401,6 +608,21 @@ def main():
         action="store_true",
         help="Accumulate consensus without saving per-view pixel caches; suitable for full-view voting initialization.",
     )
+    parser.add_argument(
+        "--compact_view_cache",
+        action="store_true",
+        help="Save only per-view Gaussian aggregates, omitting pixel-level cache fields.",
+    )
+    parser.add_argument(
+        "--view_cache_reference",
+        default=None,
+        help="Optional training-only consensus used to retain discordant view aggregates.",
+    )
+    parser.add_argument(
+        "--view_cache_deviation_cosine_max",
+        type=float,
+        default=1.0,
+    )
     parser.add_argument("--consensus_chunk_pixels", type=int, default=1024)
     parser.add_argument(
         "--compact_consensus",
@@ -431,6 +653,18 @@ def main():
             "only positive foreground-vs-background contribution margin."
         ),
     )
+    parser.add_argument(
+        "--segment_view_importance_reference",
+        default=None,
+        help=(
+            "Optional signed-ownership split consensus used for opposite-split "
+            "segment-view reliability and KL-constrained aggregation."
+        ),
+    )
+    parser.add_argument("--segment_importance_temperature", type=float, default=1.0)
+    parser.add_argument("--segment_importance_max_kl", type=float, default=0.02)
+    parser.add_argument("--segment_importance_ratio_clip", type=float, default=5.0)
+    parser.add_argument("--segment_information_weight", type=float, default=0.0)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--quiet", action="store_true")
@@ -452,6 +686,12 @@ def main():
         raise ValueError("view offset must be in [0, view_stride)")
     if args.compact_consensus and not args.consensus_only:
         raise ValueError("--compact_consensus requires --consensus_only")
+    if args.view_cache_reference and args.consensus_only:
+        raise ValueError("View-cache prefiltering requires per-view cache mode")
+    if args.view_cache_reference and not args.compact_view_cache:
+        raise ValueError("View-cache prefiltering requires --compact_view_cache")
+    if not -1.0 <= args.view_cache_deviation_cosine_max <= 1.0:
+        raise ValueError("View-cache deviation cosine must be in [-1, 1]")
     if args.consensus_splits > 1 and not args.consensus_only:
         raise ValueError("--consensus_splits > 1 requires --consensus_only")
     if args.surface_responsibility and not args.consensus_only:
@@ -477,14 +717,27 @@ def main():
     )
     if args.surface_responsibility and visibility_truncation:
         raise ValueError("Surface responsibility and visibility truncation are separate probes")
-    if args.signed_segment_ownership and not args.consensus_only:
-        raise ValueError("Signed segment ownership requires --consensus_only")
     if args.signed_segment_ownership and (
         args.surface_responsibility or visibility_truncation
     ):
         raise ValueError(
             "Signed ownership, surface responsibility, and visibility truncation are separate probes"
         )
+    if args.segment_view_importance_reference:
+        if not args.signed_segment_ownership or args.consensus_splits != 2:
+            raise ValueError(
+                "Segment-view importance requires signed ownership and two consensus splits"
+            )
+        if not args.raw_contribution_weights:
+            raise ValueError("Segment-view importance requires raw contribution weights")
+        if args.segment_importance_temperature <= 0.0:
+            raise ValueError("Segment importance temperature must be positive")
+        if args.segment_importance_max_kl < 0.0:
+            raise ValueError("Segment importance KL must be non-negative")
+        if args.segment_importance_ratio_clip < 1.0:
+            raise ValueError("Segment importance ratio clip must be at least one")
+        if args.segment_information_weight < 0.0:
+            raise ValueError("Segment information weight must be non-negative")
     safe_state(args.quiet)
     dataset = model_params.extract(args)
     pipe = pipeline_params.extract(args)
@@ -557,6 +810,36 @@ def main():
     if codec_features is not None:
         del codec_features
 
+    importance_reference_features = None
+    importance_reference_split_weights = None
+    importance_reference_total_weights = None
+    importance_reference_path = None
+    if args.segment_view_importance_reference:
+        importance_reference_path = os.path.abspath(
+            args.segment_view_importance_reference
+        )
+        reference_payload = torch.load(importance_reference_path, map_location="cpu")
+        required_reference = {
+            "split_initial_features",
+            "split_weights",
+            "total_weights",
+        }
+        missing_reference = required_reference.difference(reference_payload)
+        if missing_reference:
+            raise ValueError(
+                f"Segment-view reference is missing fields: {sorted(missing_reference)}"
+            )
+        importance_reference_features = reference_payload[
+            "split_initial_features"
+        ].detach().cpu().contiguous()
+        importance_reference_split_weights = reference_payload[
+            "split_weights"
+        ].detach().cpu().float().contiguous()
+        importance_reference_total_weights = reference_payload[
+            "total_weights"
+        ].detach().cpu().float().contiguous()
+        del reference_payload
+
     gaussians = GaussianModel(dataset.sh_degree)
     scene = Scene(dataset, gaussians, shuffle=False)
     checkpoint_iteration = load_geometry_checkpoint(scene.gaussians, args.geometry_checkpoint)
@@ -572,6 +855,32 @@ def main():
         raise ValueError("No cameras found for semantic observation caching")
 
     num_gaussians = int(scene.gaussians.get_xyz.shape[0])
+    view_cache_reference_path = None
+    view_cache_reference_features = None
+    if args.view_cache_reference:
+        view_cache_reference_path = os.path.abspath(args.view_cache_reference)
+        reference_payload = torch.load(view_cache_reference_path, map_location="cpu")
+        view_cache_reference_features = reference_payload.get("initial_features")
+        if view_cache_reference_features is None or view_cache_reference_features.shape != (
+            num_gaussians,
+            args.semantic_dim,
+        ):
+            raise ValueError("View-cache reference features do not match the scene")
+        view_cache_reference_features = (
+            view_cache_reference_features.detach().cpu().contiguous()
+        )
+        del reference_payload
+    if importance_reference_features is not None:
+        if importance_reference_features.shape != (
+            2,
+            num_gaussians,
+            args.semantic_dim,
+        ):
+            raise ValueError("Segment-view reference feature shape does not match the scene")
+        if importance_reference_split_weights.shape != (2, num_gaussians):
+            raise ValueError("Segment-view split weights do not match the scene")
+        if importance_reference_total_weights.shape != (num_gaussians,):
+            raise ValueError("Segment-view total weights do not match the scene")
     if args.consensus_splits == 1:
         split_sums = None
         split_weights = None
@@ -604,6 +913,18 @@ def main():
     ownership_confidence_sum = 0.0
     ownership_input_mass = 0.0
     ownership_retained_mass = 0.0
+    importance_view_count = 0
+    importance_mass_sum = 0.0
+    importance_kl_sum = 0.0
+    importance_effective_segments_sum = 0.0
+    importance_ratio_max = 1.0
+    importance_behavior_entropy_sum = 0.0
+    importance_target_entropy_sum = 0.0
+    importance_agreement_sum = 0.0
+    importance_split_reliability_sum = 0.0
+    importance_information_sum = 0.0
+    view_cache_input_aggregates = 0
+    view_cache_retained_aggregates = 0
 
     for view_index, camera in tqdm(indexed_cameras, desc="Caching semantic observations"):
         feature_stem = os.path.join(feature_dir, camera.image_name)
@@ -667,6 +988,8 @@ def main():
             ownership_top_weights = None
             dominant_segment = None
             signed_confidence = None
+            dominant_mass = None
+            segment_importance_ratios = None
             if args.signed_segment_ownership:
                 sampled_indices = torch.from_numpy(sampled_flat).long().cuda()
                 sampled_weights = flat_weights[sampled_indices]
@@ -682,7 +1005,12 @@ def main():
                     ownership_top_weights.float().clamp_min(0.0),
                     torch.zeros_like(ownership_top_weights.float()),
                 )
-                dominant_segment, signed_confidence, ownership_total_mass = (
+                (
+                    dominant_segment,
+                    signed_confidence,
+                    dominant_mass,
+                    ownership_total_mass,
+                ) = (
                     signed_segment_ownership(
                         ownership_top_ids,
                         ownership_top_weights,
@@ -698,6 +1026,71 @@ def main():
                 ownership_confidence_sum += float(
                     signed_confidence[ownership_supported].sum().item()
                 )
+                if importance_reference_features is not None:
+                    importance_ids = torch.nonzero(
+                        ownership_supported, as_tuple=False
+                    ).squeeze(1)
+                    importance_ids_cpu = importance_ids.detach().cpu()
+                    opposite_split = 1 - (view_index % 2)
+                    reference_features = importance_reference_features[
+                        opposite_split, importance_ids_cpu
+                    ].to("cuda", non_blocking=True)
+                    reference_split_weights = importance_reference_split_weights[
+                        opposite_split, importance_ids_cpu
+                    ].to("cuda", non_blocking=True)
+                    reference_total_weights = importance_reference_total_weights[
+                        importance_ids_cpu
+                    ].to("cuda", non_blocking=True)
+                    segment_importance_ratios, importance_diagnostics = (
+                        segment_view_importance(
+                            dominant_segment[importance_ids],
+                            dominant_mass[importance_ids]
+                            * signed_confidence[importance_ids],
+                            feature_latents,
+                            reference_features,
+                            reference_split_weights,
+                            reference_total_weights,
+                            temperature=args.segment_importance_temperature,
+                            max_kl=args.segment_importance_max_kl,
+                            ratio_clip=args.segment_importance_ratio_clip,
+                            information_weight=args.segment_information_weight,
+                        )
+                    )
+                    diagnostic_mass = importance_diagnostics["total_mass"]
+                    importance_view_count += 1
+                    importance_mass_sum += diagnostic_mass
+                    importance_kl_sum += importance_diagnostics["kl"] * diagnostic_mass
+                    importance_effective_segments_sum += (
+                        importance_diagnostics["effective_segments"] * diagnostic_mass
+                    )
+                    importance_ratio_max = max(
+                        importance_ratio_max,
+                        importance_diagnostics["max_ratio"],
+                    )
+                    importance_behavior_entropy_sum += (
+                        importance_diagnostics["behavior_entropy"] * diagnostic_mass
+                    )
+                    importance_target_entropy_sum += (
+                        importance_diagnostics["target_entropy"] * diagnostic_mass
+                    )
+                    importance_agreement_sum += (
+                        importance_diagnostics["mean_agreement"] * diagnostic_mass
+                    )
+                    importance_split_reliability_sum += (
+                        importance_diagnostics["mean_split_reliability"]
+                        * diagnostic_mass
+                    )
+                    importance_information_sum += (
+                        importance_diagnostics["mean_information_gain"]
+                        * diagnostic_mass
+                    )
+                    del (
+                        importance_ids,
+                        importance_ids_cpu,
+                        reference_features,
+                        reference_split_weights,
+                        reference_total_weights,
+                    )
                 del sampled_indices, sampled_weights, ownership_top_indices
             for start in range(0, sampled_flat.size, args.consensus_chunk_pixels):
                 stop = min(start + args.consensus_chunk_pixels, sampled_flat.size)
@@ -728,6 +1121,10 @@ def main():
                         signed_confidence,
                     )
                     ownership_retained_mass += float(top_weights.sum().item())
+                if segment_importance_ratios is not None:
+                    top_weights = top_weights * segment_importance_ratios[
+                        segment_ids[start:stop].long()
+                    ].unsqueeze(1)
                 valid_pixels = top_weights.sum(dim=1) > 1e-8
                 if not valid_pixels.any():
                     continue
@@ -774,7 +1171,14 @@ def main():
                 )
             del ownership_top_ids, ownership_top_weights
             if dominant_segment is not None:
-                del dominant_segment, signed_confidence, ownership_total_mass
+                del (
+                    dominant_segment,
+                    signed_confidence,
+                    dominant_mass,
+                    ownership_total_mass,
+                )
+            if segment_importance_ratios is not None:
+                del segment_importance_ratios
             del render_package
             torch.cuda.empty_cache()
             continue
@@ -785,6 +1189,35 @@ def main():
         top_ids = torch.gather(all_ids, 1, top_indices).long()
         valid = top_ids >= 0
         top_weights = torch.where(valid, top_weights.float().clamp_min(0.0), torch.zeros_like(top_weights.float()))
+        if args.signed_segment_ownership:
+            (
+                dominant_segment,
+                signed_confidence,
+                dominant_mass,
+                ownership_total_mass,
+            ) = signed_segment_ownership(
+                top_ids,
+                top_weights,
+                segment_ids,
+                num_gaussians,
+            )
+            ownership_supported = ownership_total_mass > 0.0
+            ownership_gaussian_observations += int(ownership_supported.sum().item())
+            ownership_positive_observations += int(
+                (signed_confidence > 0.0).sum().item()
+            )
+            ownership_confidence_sum += float(
+                signed_confidence[ownership_supported].sum().item()
+            )
+            ownership_input_mass += float(top_weights.sum().item())
+            top_weights = apply_signed_segment_ownership(
+                top_ids,
+                top_weights,
+                segment_ids,
+                dominant_segment,
+                signed_confidence,
+            )
+            ownership_retained_mass += float(top_weights.sum().item())
         weight_sums = top_weights.sum(dim=1, keepdim=True)
         valid_pixels = weight_sums.squeeze(1) > 1e-8
         if not valid_pixels.any():
@@ -810,34 +1243,90 @@ def main():
         segment_ids = segment_ids[valid_pixels]
         sampled_flat = sampled_flat[valid_pixels.detach().cpu().numpy()]
 
-        aggregate_ids, aggregate_weights, aggregate_sums, pixel_aggregate_indices = aggregate_view_observations(
-            top_ids,
-            top_weights,
-            segment_ids,
-            feature_latents,
-        )
+        if args.signed_segment_ownership:
+            (
+                aggregate_ids,
+                aggregate_weights,
+                aggregate_sums,
+                pixel_aggregate_indices,
+            ) = (
+                aggregate_owned_view_observations(
+                    top_ids,
+                    top_weights,
+                    dominant_segment,
+                    feature_latents,
+                    return_pixel_indices=not args.compact_view_cache,
+                )
+            )
+        else:
+            (
+                aggregate_ids,
+                aggregate_weights,
+                aggregate_sums,
+                pixel_aggregate_indices,
+            ) = aggregate_view_observations(
+                top_ids,
+                top_weights,
+                segment_ids,
+                feature_latents,
+                return_pixel_indices=not args.compact_view_cache,
+            )
         total_weights.index_add_(0, aggregate_ids, aggregate_weights)
         total_sums.index_add_(0, aggregate_ids, aggregate_sums)
 
+        view_cache_input_aggregates += int(aggregate_ids.numel())
+        if view_cache_reference_features is not None:
+            aggregate_ids_cpu = aggregate_ids.detach().cpu()
+            reference_features = view_cache_reference_features[
+                aggregate_ids_cpu
+            ].to("cuda", dtype=torch.float32, non_blocking=True)
+            observations = F.normalize(aggregate_sums.float(), dim=-1)
+            reference_valid = reference_features.norm(dim=-1) > 0.0
+            deviation_cosine = F.cosine_similarity(
+                observations,
+                F.normalize(reference_features, dim=-1),
+                dim=-1,
+            )
+            retained = reference_valid & (
+                deviation_cosine <= args.view_cache_deviation_cosine_max
+            )
+            aggregate_ids = aggregate_ids[retained]
+            aggregate_weights = aggregate_weights[retained]
+            aggregate_sums = aggregate_sums[retained]
+            del (
+                aggregate_ids_cpu,
+                reference_features,
+                observations,
+                reference_valid,
+                deviation_cosine,
+                retained,
+            )
+        view_cache_retained_aggregates += int(aggregate_ids.numel())
+
         view_cache_path = os.path.join(output_dir, "views", f"{view_index:04d}_{camera.image_name}.pt")
-        torch.save(
-            {
-                "view_index": view_index,
-                "image_name": camera.image_name,
-                "point_ids": top_ids.detach().cpu().to(torch.int32),
-                "point_weights": top_weights.detach().cpu().to(torch.float16),
-                "segment_ids": segment_ids.detach().cpu().to(torch.int32),
-                "sampled_flat_indices": torch.from_numpy(sampled_flat).to(torch.int64),
-                "feature_latents": feature_latents.detach().cpu().to(torch.float16),
-                "aggregate_ids": aggregate_ids.detach().cpu().to(torch.int32),
-                "aggregate_weights": aggregate_weights.detach().cpu(),
-                "aggregate_sums": aggregate_sums.detach().cpu().to(torch.float16),
-                "pixel_aggregate_indices": pixel_aggregate_indices.detach().cpu().to(torch.int32),
-                "image_height": int(camera.image_height),
-                "image_width": int(camera.image_width),
-            },
-            view_cache_path,
-        )
+        view_payload = {
+            "view_index": view_index,
+            "image_name": camera.image_name,
+            "aggregate_ids": aggregate_ids.detach().cpu().to(torch.int32),
+            "aggregate_weights": aggregate_weights.detach().cpu(),
+            "aggregate_sums": aggregate_sums.detach().cpu().to(torch.float16),
+            "image_height": int(camera.image_height),
+            "image_width": int(camera.image_width),
+        }
+        if not args.compact_view_cache:
+            view_payload.update(
+                {
+                    "point_ids": top_ids.detach().cpu().to(torch.int32),
+                    "point_weights": top_weights.detach().cpu().to(torch.float16),
+                    "segment_ids": segment_ids.detach().cpu().to(torch.int32),
+                    "sampled_flat_indices": torch.from_numpy(sampled_flat).to(torch.int64),
+                    "feature_latents": feature_latents.detach().cpu().to(torch.float16),
+                    "pixel_aggregate_indices": pixel_aggregate_indices.detach()
+                    .cpu()
+                    .to(torch.int32),
+                }
+            )
+        torch.save(view_payload, view_cache_path)
         view_entries.append(
             {
                 "view_index": view_index,
@@ -977,12 +1466,55 @@ def main():
         "ownership_retained_mass_fraction": float(
             ownership_retained_mass / max(ownership_input_mass, 1e-12)
         ),
+        "segment_view_importance_reference": importance_reference_path,
+        "segment_importance_temperature": float(
+            args.segment_importance_temperature
+        ),
+        "segment_importance_max_kl": float(args.segment_importance_max_kl),
+        "segment_importance_ratio_clip": float(
+            args.segment_importance_ratio_clip
+        ),
+        "segment_information_weight": float(args.segment_information_weight),
+        "segment_importance_num_views": int(importance_view_count),
+        "segment_importance_weighted_kl": float(
+            importance_kl_sum / max(importance_mass_sum, 1e-12)
+        ),
+        "segment_importance_weighted_effective_segments": float(
+            importance_effective_segments_sum / max(importance_mass_sum, 1e-12)
+        ),
+        "segment_importance_max_ratio": float(importance_ratio_max),
+        "segment_importance_weighted_behavior_entropy": float(
+            importance_behavior_entropy_sum / max(importance_mass_sum, 1e-12)
+        ),
+        "segment_importance_weighted_target_entropy": float(
+            importance_target_entropy_sum / max(importance_mass_sum, 1e-12)
+        ),
+        "segment_importance_weighted_agreement": float(
+            importance_agreement_sum / max(importance_mass_sum, 1e-12)
+        ),
+        "segment_importance_weighted_split_reliability": float(
+            importance_split_reliability_sum
+            / max(importance_mass_sum, 1e-12)
+        ),
+        "segment_importance_weighted_information_gain": float(
+            importance_information_sum / max(importance_mass_sum, 1e-12)
+        ),
         "max_pixels_per_view": int(args.max_pixels_per_view),
         "max_views": int(args.max_views),
         "view_stride": int(args.view_stride),
         "view_offset": int(args.view_offset),
         "num_selected_views": int(len(indexed_cameras)),
         "compact_consensus": bool(args.compact_consensus),
+        "compact_view_cache": bool(args.compact_view_cache),
+        "view_cache_reference": view_cache_reference_path,
+        "view_cache_deviation_cosine_max": float(
+            args.view_cache_deviation_cosine_max
+        ),
+        "view_cache_input_aggregates": int(view_cache_input_aggregates),
+        "view_cache_retained_aggregates": int(view_cache_retained_aggregates),
+        "view_cache_retained_fraction": float(
+            view_cache_retained_aggregates / max(1, view_cache_input_aggregates)
+        ),
         "codec": os.path.relpath(codec_path, output_dir),
         "consensus": os.path.relpath(consensus_path, output_dir),
         "num_supported_gaussians": int(support.sum().item()),
