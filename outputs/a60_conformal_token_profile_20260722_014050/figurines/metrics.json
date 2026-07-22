@@ -1,0 +1,2332 @@
+{
+  "evaluation_protocol": "drsplat_3d_selection",
+  "selection_space": "per_gaussian_openclip_relevancy",
+  "selection_operator": ">",
+  "occupancy_threshold": 0.7,
+  "occupancy_operator": ">",
+  "threshold_summary": [
+    {
+      "num_samples": 56,
+      "mIoU": 0.574141211932665,
+      "mAcc@0.25": 0.8571428571428571,
+      "mAcc@0.5": 0.5892857142857143,
+      "per_category": {
+        "bag": 0.0,
+        "green apple": 0.5579888693260023,
+        "green toy chair": 0.8580558416508235,
+        "jake": 0.2813892405845216,
+        "miffy": 0.0,
+        "old camera": 0.3959235828328251,
+        "pikachu": 0.46461437304269215,
+        "pink ice cream": 0.9048825806230547,
+        "pirate hat": 0.0,
+        "porcelain hand": 0.8206585806499658,
+        "pumpkin": 0.47292161520190024,
+        "red apple": 0.9184248017555365,
+        "red toy chair": 0.8418765591051742,
+        "rubber duck with buoy": 0.5297386470731255,
+        "rubber duck with hat": 0.5344948469719399,
+        "rubics cube": 0.9292711468291627,
+        "spatula": 0.6017419259310214,
+        "tesla door handle": 0.526709997105813,
+        "toy cat statue": 0.5815319848929451,
+        "toy elephant": 0.9224532600414732,
+        "waldo": 0.7034557171636137
+      },
+      "selection_threshold": 0.55,
+      "samples": [
+        {
+          "image_name": "frame_00195",
+          "category": "bag",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "green apple",
+          "iou": 0.4407444922765257
+        },
+        {
+          "image_name": "frame_00105",
+          "category": "green apple",
+          "iou": 0.9285064344209021
+        },
+        {
+          "image_name": "frame_00152",
+          "category": "green apple",
+          "iou": 0.5775931117340809
+        },
+        {
+          "image_name": "frame_00195",
+          "category": "green apple",
+          "iou": 0.28511143887250084
+        },
+        {
+          "image_name": "frame_00105",
+          "category": "green toy chair",
+          "iou": 0.7701709062003179
+        },
+        {
+          "image_name": "frame_00195",
+          "category": "green toy chair",
+          "iou": 0.9459407771013292
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "jake",
+          "iou": 0.15002295684113867
+        },
+        {
+          "image_name": "frame_00105",
+          "category": "jake",
+          "iou": 0.3673923800098961
+        },
+        {
+          "image_name": "frame_00152",
+          "category": "jake",
+          "iou": 0.32675238490253006
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "miffy",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00195",
+          "category": "miffy",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "old camera",
+          "iou": 0.29954552832332415
+        },
+        {
+          "image_name": "frame_00105",
+          "category": "old camera",
+          "iou": 0.5594156840793774
+        },
+        {
+          "image_name": "frame_00195",
+          "category": "old camera",
+          "iou": 0.3288095360957738
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "pikachu",
+          "iou": 0.4859271523178808
+        },
+        {
+          "image_name": "frame_00152",
+          "category": "pikachu",
+          "iou": 0.44330159376750344
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "pink ice cream",
+          "iou": 0.9465140478668054
+        },
+        {
+          "image_name": "frame_00105",
+          "category": "pink ice cream",
+          "iou": 0.8467015706806282
+        },
+        {
+          "image_name": "frame_00195",
+          "category": "pink ice cream",
+          "iou": 0.9214321233217305
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "pirate hat",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00105",
+          "category": "pirate hat",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00152",
+          "category": "pirate hat",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00195",
+          "category": "pirate hat",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "porcelain hand",
+          "iou": 0.841591784338896
+        },
+        {
+          "image_name": "frame_00152",
+          "category": "porcelain hand",
+          "iou": 0.7446919596240863
+        },
+        {
+          "image_name": "frame_00195",
+          "category": "porcelain hand",
+          "iou": 0.875691997986915
+        },
+        {
+          "image_name": "frame_00105",
+          "category": "pumpkin",
+          "iou": 0.47292161520190024
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "red apple",
+          "iou": 0.9295382669196711
+        },
+        {
+          "image_name": "frame_00105",
+          "category": "red apple",
+          "iou": 0.9672886497624635
+        },
+        {
+          "image_name": "frame_00152",
+          "category": "red apple",
+          "iou": 0.8584474885844748
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "red toy chair",
+          "iou": 0.8418765591051742
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "rubber duck with buoy",
+          "iou": 0.5205697401318282
+        },
+        {
+          "image_name": "frame_00105",
+          "category": "rubber duck with buoy",
+          "iou": 0.6185403084751153
+        },
+        {
+          "image_name": "frame_00195",
+          "category": "rubber duck with buoy",
+          "iou": 0.45010589261243306
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "rubber duck with hat",
+          "iou": 0.4327669716306604
+        },
+        {
+          "image_name": "frame_00105",
+          "category": "rubber duck with hat",
+          "iou": 0.3103164139749506
+        },
+        {
+          "image_name": "frame_00152",
+          "category": "rubber duck with hat",
+          "iou": 0.9050897467420703
+        },
+        {
+          "image_name": "frame_00195",
+          "category": "rubber duck with hat",
+          "iou": 0.4898062555400785
+        },
+        {
+          "image_name": "frame_00105",
+          "category": "rubics cube",
+          "iou": 0.9334615384615385
+        },
+        {
+          "image_name": "frame_00152",
+          "category": "rubics cube",
+          "iou": 0.9127542605827378
+        },
+        {
+          "image_name": "frame_00195",
+          "category": "rubics cube",
+          "iou": 0.9415976414432121
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "spatula",
+          "iou": 0.7485221281354849
+        },
+        {
+          "image_name": "frame_00105",
+          "category": "spatula",
+          "iou": 0.4969927192149414
+        },
+        {
+          "image_name": "frame_00195",
+          "category": "spatula",
+          "iou": 0.5597109304426378
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "tesla door handle",
+          "iou": 0.41902166116769474
+        },
+        {
+          "image_name": "frame_00105",
+          "category": "tesla door handle",
+          "iou": 0.6343983330439312
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "toy cat statue",
+          "iou": 0.5354676710608914
+        },
+        {
+          "image_name": "frame_00152",
+          "category": "toy cat statue",
+          "iou": 0.6954781319495923
+        },
+        {
+          "image_name": "frame_00195",
+          "category": "toy cat statue",
+          "iou": 0.5136501516683518
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "toy elephant",
+          "iou": 0.8918152828628794
+        },
+        {
+          "image_name": "frame_00152",
+          "category": "toy elephant",
+          "iou": 0.9433244579688095
+        },
+        {
+          "image_name": "frame_00195",
+          "category": "toy elephant",
+          "iou": 0.9322200392927309
+        },
+        {
+          "image_name": "frame_00041",
+          "category": "waldo",
+          "iou": 0.8022898631667132
+        },
+        {
+          "image_name": "frame_00152",
+          "category": "waldo",
+          "iou": 0.6153217902646194
+        },
+        {
+          "image_name": "frame_00195",
+          "category": "waldo",
+          "iou": 0.6927554980595084
+        }
+      ]
+    }
+  ],
+  "best_scene_threshold_diagnostic": {
+    "num_samples": 56,
+    "mIoU": 0.574141211932665,
+    "mAcc@0.25": 0.8571428571428571,
+    "mAcc@0.5": 0.5892857142857143,
+    "per_category": {
+      "bag": 0.0,
+      "green apple": 0.5579888693260023,
+      "green toy chair": 0.8580558416508235,
+      "jake": 0.2813892405845216,
+      "miffy": 0.0,
+      "old camera": 0.3959235828328251,
+      "pikachu": 0.46461437304269215,
+      "pink ice cream": 0.9048825806230547,
+      "pirate hat": 0.0,
+      "porcelain hand": 0.8206585806499658,
+      "pumpkin": 0.47292161520190024,
+      "red apple": 0.9184248017555365,
+      "red toy chair": 0.8418765591051742,
+      "rubber duck with buoy": 0.5297386470731255,
+      "rubber duck with hat": 0.5344948469719399,
+      "rubics cube": 0.9292711468291627,
+      "spatula": 0.6017419259310214,
+      "tesla door handle": 0.526709997105813,
+      "toy cat statue": 0.5815319848929451,
+      "toy elephant": 0.9224532600414732,
+      "waldo": 0.7034557171636137
+    },
+    "selection_threshold": 0.55
+  },
+  "note": "Paper-style LeRF-OVS 3D object selection: threshold Gaussian relevancy before rendering, binarize rendered occupancy, and average IoU over annotation-view samples. Use scripts/summarize_lerf_ovs_paper.py on all four scenes to select one threshold per method and obtain final scores.",
+  "source_path": "/home/anlanfan/Dr-Splat/drsplat_data/lerf_ovs/figurines",
+  "model_path": "/mnt/zju105100248/home/anlanfan/a60_conformal_token_profile_20260722_014050/figurines/model_shadow",
+  "geometry_checkpoint": "/home/anlanfan/Dr-Splat/runs/3dgs/figurines/chkpnt30000.pth",
+  "geometry_checkpoint_iteration": 30000,
+  "codebook_dir": "/home/anlanfan/Dr-Splat/runs/a14_e8_joint32k_20260716/figurines/pruned_candidate_ids",
+  "consensus_path": null,
+  "codebook_manifest": {
+    "format_version": 1,
+    "representation": "gaussian_adaptive_shared_codebook",
+    "feature_dim": 512,
+    "num_gaussians": 748193,
+    "num_valid_gaussians": 78299,
+    "valid_fraction": 0.10465080534033332,
+    "num_codes": 32768,
+    "id_slots": 2,
+    "minimum_ids_per_valid_gaussian": 1,
+    "uses_consensus_capacity": false,
+    "fills_consensus_capacity": false,
+    "requested_average_capacity": 2.0,
+    "storage_layout": "base_plus_sparse_overflow",
+    "codebook_files": [
+      "codebook_shared.npy"
+    ],
+    "point_code_ids": "point_code_ids.npy",
+    "overflow_point_ids": "overflow_point_ids.npy",
+    "overflow_code_ids": "overflow_code_ids.npy",
+    "overflow_slots": "overflow_slots.npy",
+    "overflow_weights": "overflow_weights.npy",
+    "valid_mask": "valid_mask.npy",
+    "id_dtype": "uint16",
+    "invalid_id": 65535,
+    "weight_dtype": "uint8_relative",
+    "average_ids_per_valid_gaussian": 1.9934992784071317,
+    "id_count_histogram": {
+      "1": 509,
+      "2": 77790
+    },
+    "mean_reconstruction_cosine": 0.9974087476730347,
+    "std_reconstruction_cosine": 0.004143561236560345,
+    "min_reconstruction_cosine": 0.8222989439964294,
+    "storage": {
+      "codebook_bytes_fp16": 33554560,
+      "point_id_bytes": 1651966,
+      "overflow_point_bytes": 311160,
+      "overflow_slot_bytes": 77790,
+      "point_weight_bytes": 77790,
+      "valid_mask_bytes": 748193,
+      "total_semantic_bytes": 36421459,
+      "full_per_gaussian_fp16_bytes": 766149632,
+      "compression_ratio_vs_512d_fp16": 21.035665594835177,
+      "bytes_per_gaussian_amortized": 48.679229824390234
+    },
+    "source": {
+      "type": "counterfactual_capacity_pruned_codebook",
+      "artifact_dir": "/home/anlanfan/Dr-Splat/runs/a14_e8_joint32k_20260716/figurines/candidate_ids",
+      "keep_mask": "/home/anlanfan/Dr-Splat/runs/a14_e8_joint32k_20260716/figurines/candidate_mask.npy"
+    },
+    "args": {
+      "consensus": "/home/anlanfan/Dr-Splat/runs/a6_responsibility_multiscene_20260715/figurines/consensus_alpha050.pt",
+      "codebook": "/home/anlanfan/Dr-Splat/runs/a14_e8_joint32k_20260716/figurines/joint_vocabulary/codebook_shared.npy",
+      "num_codes": 32768,
+      "max_ids": 2,
+      "min_ids": 2,
+      "use_consensus_capacity": false,
+      "fill_consensus_capacity": false,
+      "min_cosine_gain": 0.0,
+      "target_cosine": 1.0,
+      "train_samples": 262144,
+      "iterations": 25,
+      "assignment_chunk": 4096,
+      "faiss_gpu": true,
+      "seed": 20260716,
+      "output_dir": "/home/anlanfan/Dr-Splat/runs/a14_e8_joint32k_20260716/figurines/candidate_ids"
+    }
+  },
+  "object_codebook_dir": null,
+  "object_codebook_manifest": null,
+  "object_feature_weight": 0.0,
+  "query_route_base_codebook_dir": "/home/anlanfan/Dr-Splat/runs/a14_e8_joint32k_20260716/figurines/base_ids",
+  "query_route_base_codebook_manifest": {
+    "format_version": 1,
+    "representation": "gaussian_adaptive_shared_codebook",
+    "feature_dim": 512,
+    "num_gaussians": 748193,
+    "num_valid_gaussians": 324027,
+    "valid_fraction": 0.433079432713217,
+    "num_codes": 32768,
+    "id_slots": 2,
+    "minimum_ids_per_valid_gaussian": 2,
+    "uses_consensus_capacity": false,
+    "fills_consensus_capacity": false,
+    "requested_average_capacity": 2.0,
+    "storage_layout": "base_plus_sparse_overflow",
+    "codebook_files": [
+      "codebook_shared.npy"
+    ],
+    "point_code_ids": "point_code_ids.npy",
+    "overflow_point_ids": "overflow_point_ids.npy",
+    "overflow_code_ids": "overflow_code_ids.npy",
+    "overflow_slots": "overflow_slots.npy",
+    "overflow_weights": "overflow_weights.npy",
+    "valid_mask": "valid_mask.npy",
+    "id_dtype": "uint16",
+    "invalid_id": 65535,
+    "weight_dtype": "uint8_relative",
+    "average_ids_per_valid_gaussian": 1.975890897980724,
+    "id_count_histogram": {
+      "1": 7812,
+      "2": 316215
+    },
+    "mean_reconstruction_cosine": 0.9979183673858643,
+    "std_reconstruction_cosine": 0.003926282282918692,
+    "min_reconstruction_cosine": 0.8222989439964294,
+    "storage": {
+      "codebook_bytes_fp16": 33554432,
+      "point_id_bytes": 2128816,
+      "overflow_point_bytes": 1264860,
+      "overflow_slot_bytes": 316215,
+      "point_weight_bytes": 316215,
+      "valid_mask_bytes": 748193,
+      "total_semantic_bytes": 38328731,
+      "full_per_gaussian_fp16_bytes": 766149632,
+      "compression_ratio_vs_512d_fp16": 19.988912025289853,
+      "bytes_per_gaussian_amortized": 51.22840096071468
+    },
+    "source": {
+      "type": "self_trained_2d_consensus",
+      "consensus": "/home/anlanfan/Dr-Splat/runs/a14_signed_ownership_20260716/figurines/fused_w1p5_t005.pt",
+      "note": "Initialized directly from frozen 2D semantic observations, without a 3D teacher."
+    },
+    "args": {
+      "consensus": "/home/anlanfan/Dr-Splat/runs/a14_signed_ownership_20260716/figurines/fused_w1p5_t005.pt",
+      "codebook": "/home/anlanfan/Dr-Splat/runs/a14_e8_joint32k_20260716/figurines/joint_vocabulary/codebook_shared.npy",
+      "num_codes": 32768,
+      "max_ids": 2,
+      "min_ids": 2,
+      "use_consensus_capacity": false,
+      "fill_consensus_capacity": false,
+      "min_cosine_gain": 0.0,
+      "target_cosine": 1.0,
+      "train_samples": 262144,
+      "iterations": 25,
+      "assignment_chunk": 4096,
+      "faiss_gpu": true,
+      "seed": 20260716,
+      "output_dir": "/home/anlanfan/Dr-Splat/runs/a14_e8_joint32k_20260716/figurines/base_ids"
+    }
+  },
+  "codebook_query_route": "query_positive",
+  "query_route_candidate_mask": null,
+  "query_route_candidate_mask_fraction": 1.0,
+  "discrete_route_diagnostics": {
+    "bag": {
+      "candidate_fraction": 0.06470923870801926
+    },
+    "green apple": {
+      "candidate_fraction": 0.033052969723939896
+    },
+    "green toy chair": {
+      "candidate_fraction": 0.039759792387485504
+    },
+    "jake": {
+      "candidate_fraction": 0.047726988792419434
+    },
+    "miffy": {
+      "candidate_fraction": 0.031411681324243546
+    },
+    "old camera": {
+      "candidate_fraction": 0.03733261302113533
+    },
+    "pikachu": {
+      "candidate_fraction": 0.04116450995206833
+    },
+    "pink ice cream": {
+      "candidate_fraction": 0.037109408527612686
+    },
+    "pirate hat": {
+      "candidate_fraction": 0.0615055188536644
+    },
+    "porcelain hand": {
+      "candidate_fraction": 0.06221255660057068
+    },
+    "pumpkin": {
+      "candidate_fraction": 0.04000170901417732
+    },
+    "red apple": {
+      "candidate_fraction": 0.03486667200922966
+    },
+    "red toy chair": {
+      "candidate_fraction": 0.03758789598941803
+    },
+    "rubber duck with buoy": {
+      "candidate_fraction": 0.03933343291282654
+    },
+    "rubber duck with hat": {
+      "candidate_fraction": 0.043049052357673645
+    },
+    "rubics cube": {
+      "candidate_fraction": 0.03216282278299332
+    },
+    "spatula": {
+      "candidate_fraction": 0.07212844491004944
+    },
+    "tesla door handle": {
+      "candidate_fraction": 0.057034749537706375
+    },
+    "toy cat statue": {
+      "candidate_fraction": 0.04114178940653801
+    },
+    "toy elephant": {
+      "candidate_fraction": 0.041705816984176636
+    },
+    "waldo": {
+      "candidate_fraction": 0.03547346591949463
+    }
+  },
+  "hypothesis_dir": null,
+  "hypothesis_manifest": null,
+  "hypothesis_readout": "switch",
+  "hypothesis_query_margin": false,
+  "group_codebook": "/home/anlanfan/Dr-Splat/runs/a33_equal_four_token_seed_replication_20260718_113948/figurines/equal_four_token_memory",
+  "group_assignments": null,
+  "group_hierarchy_dir": "/home/anlanfan/Dr-Splat/runs/a33_equal_four_token_seed_replication_20260718_113948/figurines/equal_four_token_memory",
+  "group_relation_graph_dir": null,
+  "group_relation_graph_manifest": null,
+  "group_counterfactual_codebook_dir": null,
+  "group_counterfactual_codebook_manifest": null,
+  "group_relation_positive_strength": 0.2,
+  "group_relation_negative_strength": 0.1,
+  "group_relation_maximum_delta": 0.05,
+  "rgr_alpha": 0.0,
+  "rgr_mode": "positive",
+  "group_topk": 4,
+  "group_aggregation": "weighted",
+  "group_score_power": 1.0,
+  "point_gate_floor": 0.1,
+  "point_gate_power": 1.0,
+  "group_membership_confidence": false,
+  "group_readout": "equal_query_profile_group_completion",
+  "group_query_temperature": 0.05,
+  "group_query_tie_margin": 0.0,
+  "group_quantization_uncertainty_scale": 0.05,
+  "group_level_margin_threshold": 0.25,
+  "group_level_margin_temperature": 0.1,
+  "group_competitor_weight": 1.0,
+  "group_route_fraction": 1.0,
+  "group_route_priority": "query_gain",
+  "route_diagnostics": {
+    "bag": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 705186,
+      "mean_selected_group_support": 0.009938600473105907,
+      "mean_selected_group_probability": 0.0051562730222940445,
+      "penalized_points": 302177,
+      "mean_penalty": 0.03121953271329403,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 2176,
+      "outside_points": 297777,
+      "anchor_score": 0.41792452335357666,
+      "raw_anchor_score": 0.4946955740451813,
+      "semantic_preservation_score": 0.41792452335357666,
+      "outside_score": 0.41792452335357666,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.6971637606620789,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 11,
+          "maximum_probability": 0.36237552762031555,
+          "posterior_entropy": 1.369840383529663,
+          "evidence_min": 0.3408483564853668,
+          "evidence_max": 0.4872133433818817
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 24,
+          "maximum_probability": 0.5042657256126404,
+          "posterior_entropy": 1.7850854396820068,
+          "evidence_min": 0.3334270715713501,
+          "evidence_max": 0.4784889221191406
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 3,
+          "maximum_probability": 0.42171740531921387,
+          "posterior_entropy": 1.0772075653076172,
+          "evidence_min": 0.323777437210083,
+          "evidence_max": 0.477192223072052
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 7,
+          "maximum_probability": 0.34997180104255676,
+          "posterior_entropy": 1.4602746963500977,
+          "evidence_min": 0.3102183938026428,
+          "evidence_max": 0.47334399819374084
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 2,
+        "rejected_small_seed_groups": 2,
+        "completed_points": 896,
+        "completed_fraction": 0.001197551959194243,
+        "mean_completion_delta": 0.04584933817386627,
+        "maximum_completion_delta": 0.0929139256477356,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 2,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.04401803947985172,
+        "mean_profile_candidate_gate": 0.8864744901657104
+      }
+    },
+    "green apple": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 707325,
+      "mean_selected_group_support": 0.017264122143387794,
+      "mean_selected_group_probability": 0.011854017153382301,
+      "penalized_points": 299988,
+      "mean_penalty": 0.006445730570703745,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 6485,
+      "outside_points": 292209,
+      "anchor_score": 0.22419473528862,
+      "raw_anchor_score": 0.22419473528862,
+      "semantic_preservation_score": 0.29798299074172974,
+      "outside_score": 0.22419473528862,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.14798755943775177,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 2,
+          "maximum_probability": 0.6654115319252014,
+          "posterior_entropy": 0.6373805999755859,
+          "evidence_min": 0.20477727055549622,
+          "evidence_max": 0.4370909333229065
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 8,
+          "maximum_probability": 0.7984049320220947,
+          "posterior_entropy": 0.7675179243087769,
+          "evidence_min": 0.20000649988651276,
+          "evidence_max": 0.4149353802204132
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 3,
+          "maximum_probability": 0.5488103628158569,
+          "posterior_entropy": 0.7250262498855591,
+          "evidence_min": 0.21575793623924255,
+          "evidence_max": 0.4396043121814728
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 5,
+          "maximum_probability": 0.6824795007705688,
+          "posterior_entropy": 0.8145675659179688,
+          "evidence_min": 0.20090918242931366,
+          "evidence_max": 0.4122876822948456
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 3,
+        "rejected_small_seed_groups": 1,
+        "completed_points": 859,
+        "completed_fraction": 0.001148099428974092,
+        "mean_completion_delta": 0.002206764416769147,
+        "maximum_completion_delta": 0.009524822235107422,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 3,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.0540537474056085,
+        "mean_profile_candidate_gate": 0.9616248607635498
+      }
+    },
+    "green toy chair": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 706457,
+      "mean_selected_group_support": 0.007595539558678865,
+      "mean_selected_group_probability": 0.003625264624133706,
+      "penalized_points": 304650,
+      "mean_penalty": 0.03034043312072754,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 947,
+      "outside_points": 301128,
+      "anchor_score": 0.24990463256835938,
+      "raw_anchor_score": 0.29692888259887695,
+      "semantic_preservation_score": 0.24990463256835938,
+      "outside_score": 0.24990463256835938,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.6942023038864136,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 10,
+          "maximum_probability": 0.43657705187797546,
+          "posterior_entropy": 1.419318437576294,
+          "evidence_min": 0.1778293401002884,
+          "evidence_max": 0.36890512704849243
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 12,
+          "maximum_probability": 0.452892929315567,
+          "posterior_entropy": 1.7393673658370972,
+          "evidence_min": 0.16133251786231995,
+          "evidence_max": 0.35108399391174316
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 3,
+          "maximum_probability": 0.6829551458358765,
+          "posterior_entropy": 0.7646995782852173,
+          "evidence_min": 0.16097481548786163,
+          "evidence_max": 0.4088088274002075
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 5,
+          "maximum_probability": 0.7447284460067749,
+          "posterior_entropy": 0.8090401887893677,
+          "evidence_min": 0.14336909353733063,
+          "evidence_max": 0.4131741523742676
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 0,
+        "rejected_small_seed_groups": 4,
+        "completed_points": 0,
+        "completed_fraction": 0.0,
+        "mean_completion_delta": 0.0,
+        "maximum_completion_delta": 0.0,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 0,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.0,
+        "mean_profile_candidate_gate": 0.0
+      }
+    },
+    "jake": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 706361,
+      "mean_selected_group_support": 0.19420447945594788,
+      "mean_selected_group_probability": 0.017516378313302994,
+      "penalized_points": 302759,
+      "mean_penalty": 0.020557168871164322,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 2742,
+      "outside_points": 171632,
+      "anchor_score": 0.5003256797790527,
+      "raw_anchor_score": 0.5003256797790527,
+      "semantic_preservation_score": 0.5187808275222778,
+      "outside_score": 0.5003256797790527,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.49661263823509216,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 71,
+          "maximum_probability": 0.08531447499990463,
+          "posterior_entropy": 3.5853264331817627,
+          "evidence_min": 0.4302557110786438,
+          "evidence_max": 0.5154969096183777
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 111,
+          "maximum_probability": 0.0740714818239212,
+          "posterior_entropy": 3.910759925842285,
+          "evidence_min": 0.42337197065353394,
+          "evidence_max": 0.5061941742897034
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 58,
+          "maximum_probability": 0.07519430667161942,
+          "posterior_entropy": 3.483798027038574,
+          "evidence_min": 0.4346941113471985,
+          "evidence_max": 0.5306523442268372
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 64,
+          "maximum_probability": 0.16205410659313202,
+          "posterior_entropy": 3.161620855331421,
+          "evidence_min": 0.4278765320777893,
+          "evidence_max": 0.5306193232536316
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 3,
+        "rejected_small_seed_groups": 1,
+        "completed_points": 368,
+        "completed_fraction": 0.0004918517079204321,
+        "mean_completion_delta": 0.0378287099301815,
+        "maximum_completion_delta": 0.08729058504104614,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 3,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.04641313850879669,
+        "mean_profile_candidate_gate": 0.9668751358985901
+      }
+    },
+    "miffy": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 707378,
+      "mean_selected_group_support": 0.06540463119745255,
+      "mean_selected_group_probability": 0.014113899320363998,
+      "penalized_points": 304835,
+      "mean_penalty": 0.023118022829294205,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 1683,
+      "outside_points": 255424,
+      "anchor_score": 0.34984996914863586,
+      "raw_anchor_score": 0.34984996914863586,
+      "semantic_preservation_score": 0.3741244673728943,
+      "outside_score": 0.34984996914863586,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.54522705078125,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 22,
+          "maximum_probability": 0.2065572589635849,
+          "posterior_entropy": 2.5555965900421143,
+          "evidence_min": 0.20569996535778046,
+          "evidence_max": 0.41681841015815735
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 14,
+          "maximum_probability": 0.30513250827789307,
+          "posterior_entropy": 1.797325611114502,
+          "evidence_min": 0.20317688584327698,
+          "evidence_max": 0.3887759745121002
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 19,
+          "maximum_probability": 0.355705589056015,
+          "posterior_entropy": 1.9972424507141113,
+          "evidence_min": 0.22306972742080688,
+          "evidence_max": 0.42759695649147034
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 24,
+          "maximum_probability": 0.2078307718038559,
+          "posterior_entropy": 2.4080302715301514,
+          "evidence_min": 0.23335033655166626,
+          "evidence_max": 0.4199797511100769
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 0,
+        "rejected_small_seed_groups": 4,
+        "completed_points": 0,
+        "completed_fraction": 0.0,
+        "mean_completion_delta": 0.0,
+        "maximum_completion_delta": 0.0,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 0,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.0,
+        "mean_profile_candidate_gate": 0.0
+      }
+    },
+    "old camera": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 706804,
+      "mean_selected_group_support": 0.04142620787024498,
+      "mean_selected_group_probability": 0.010954598896205425,
+      "penalized_points": 301527,
+      "mean_penalty": 0.011923631653189659,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 4436,
+      "outside_points": 282355,
+      "anchor_score": 0.2720598876476288,
+      "raw_anchor_score": 0.2720598876476288,
+      "semantic_preservation_score": 0.34697258472442627,
+      "outside_score": 0.2720598876476288,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.2627497911453247,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 16,
+          "maximum_probability": 0.2672039270401001,
+          "posterior_entropy": 2.144237518310547,
+          "evidence_min": 0.23246437311172485,
+          "evidence_max": 0.42445021867752075
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 18,
+          "maximum_probability": 0.2790350914001465,
+          "posterior_entropy": 2.0934436321258545,
+          "evidence_min": 0.20393003523349762,
+          "evidence_max": 0.37760257720947266
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 19,
+          "maximum_probability": 0.16454628109931946,
+          "posterior_entropy": 2.462259292602539,
+          "evidence_min": 0.20260897278785706,
+          "evidence_max": 0.3907976746559143
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 20,
+          "maximum_probability": 0.21257871389389038,
+          "posterior_entropy": 2.3611247539520264,
+          "evidence_min": 0.22651205956935883,
+          "evidence_max": 0.40772226452827454
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 1,
+        "rejected_small_seed_groups": 3,
+        "completed_points": 1104,
+        "completed_fraction": 0.0014755551237612963,
+        "mean_completion_delta": 0.006549722049385309,
+        "maximum_completion_delta": 0.09503579139709473,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 1,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.06112680584192276,
+        "mean_profile_candidate_gate": 0.9428749680519104
+      }
+    },
+    "pikachu": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 704531,
+      "mean_selected_group_support": 0.02815336175262928,
+      "mean_selected_group_probability": 0.013573727570474148,
+      "penalized_points": 297654,
+      "mean_penalty": 0.005664485972374678,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 6017,
+      "outside_points": 277689,
+      "anchor_score": 0.2775537073612213,
+      "raw_anchor_score": 0.2775537073612213,
+      "semantic_preservation_score": 0.35176515579223633,
+      "outside_score": 0.2775537073612213,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.12814496457576752,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 8,
+          "maximum_probability": 0.561833381652832,
+          "posterior_entropy": 1.2787028551101685,
+          "evidence_min": 0.25105026364326477,
+          "evidence_max": 0.4490501880645752
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 16,
+          "maximum_probability": 0.23004721105098724,
+          "posterior_entropy": 1.9633216857910156,
+          "evidence_min": 0.238704651594162,
+          "evidence_max": 0.3912351131439209
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 8,
+          "maximum_probability": 0.40677276253700256,
+          "posterior_entropy": 1.5275572538375854,
+          "evidence_min": 0.24051357805728912,
+          "evidence_max": 0.4458347260951996
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 23,
+          "maximum_probability": 0.35508835315704346,
+          "posterior_entropy": 1.9665160179138184,
+          "evidence_min": 0.2594137191772461,
+          "evidence_max": 0.4083009660243988
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 2,
+        "rejected_small_seed_groups": 2,
+        "completed_points": 664,
+        "completed_fraction": 0.0008874715422280133,
+        "mean_completion_delta": 0.07647059112787247,
+        "maximum_completion_delta": 0.09663119912147522,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 2,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.07363581284880638,
+        "mean_profile_candidate_gate": 0.9750268459320068
+      }
+    },
+    "pink ice cream": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 706292,
+      "mean_selected_group_support": 0.054939284920692444,
+      "mean_selected_group_probability": 0.014561276882886887,
+      "penalized_points": 297731,
+      "mean_penalty": 0.013172538951039314,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 13042,
+      "outside_points": 279465,
+      "anchor_score": 0.19163954257965088,
+      "raw_anchor_score": 0.19163954257965088,
+      "semantic_preservation_score": 0.23324908316135406,
+      "outside_score": 0.19163954257965088,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.30829232931137085,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 9,
+          "maximum_probability": 0.26482775807380676,
+          "posterior_entropy": 1.7818551063537598,
+          "evidence_min": 0.13077054917812347,
+          "evidence_max": 0.3348749577999115
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 9,
+          "maximum_probability": 0.2884792983531952,
+          "posterior_entropy": 1.7062221765518188,
+          "evidence_min": 0.1329035609960556,
+          "evidence_max": 0.32646822929382324
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 8,
+          "maximum_probability": 0.2216975837945938,
+          "posterior_entropy": 1.8162620067596436,
+          "evidence_min": 0.12213364988565445,
+          "evidence_max": 0.33145689964294434
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 6,
+          "maximum_probability": 0.3143931031227112,
+          "posterior_entropy": 1.5161240100860596,
+          "evidence_min": 0.12778562307357788,
+          "evidence_max": 0.3395194113254547
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 6,
+        "certified_groups": 4,
+        "rejected_small_seed_groups": 2,
+        "completed_points": 649,
+        "completed_fraction": 0.0008674232522025704,
+        "mean_completion_delta": 0.004149489104747772,
+        "maximum_completion_delta": 0.037329256534576416,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 4,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.058714719489216805,
+        "mean_profile_candidate_gate": 0.7292419318109751
+      }
+    },
+    "pirate hat": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 703580,
+      "mean_selected_group_support": 0.004905459005385637,
+      "mean_selected_group_probability": 0.001750071649439633,
+      "penalized_points": 301951,
+      "mean_penalty": 0.02766428142786026,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 769,
+      "outside_points": 295428,
+      "anchor_score": 0.3260364830493927,
+      "raw_anchor_score": 0.3260364830493927,
+      "semantic_preservation_score": 0.34982651472091675,
+      "outside_score": 0.3260364830493927,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.624979555606842,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 12,
+          "maximum_probability": 0.6521444320678711,
+          "posterior_entropy": 1.1924822330474854,
+          "evidence_min": 0.23461145162582397,
+          "evidence_max": 0.44031864404678345
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 20,
+          "maximum_probability": 0.17571455240249634,
+          "posterior_entropy": 2.3733067512512207,
+          "evidence_min": 0.1724405288696289,
+          "evidence_max": 0.3766365945339203
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 11,
+          "maximum_probability": 0.6837966442108154,
+          "posterior_entropy": 1.1702032089233398,
+          "evidence_min": 0.19472120702266693,
+          "evidence_max": 0.4440200924873352
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 4,
+          "maximum_probability": 0.5800961256027222,
+          "posterior_entropy": 0.809728741645813,
+          "evidence_min": 0.21232637763023376,
+          "evidence_max": 0.45215049386024475
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 0,
+        "rejected_small_seed_groups": 4,
+        "completed_points": 0,
+        "completed_fraction": 0.0,
+        "mean_completion_delta": 0.0,
+        "maximum_completion_delta": 0.0,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 0,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.0,
+        "mean_profile_candidate_gate": 0.0
+      }
+    },
+    "porcelain hand": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 701299,
+      "mean_selected_group_support": 0.0193489883095026,
+      "mean_selected_group_probability": 0.006001680623739958,
+      "penalized_points": 294742,
+      "mean_penalty": 0.03117852844297886,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 5697,
+      "outside_points": 280085,
+      "anchor_score": 0.35781627893447876,
+      "raw_anchor_score": 0.36481207609176636,
+      "semantic_preservation_score": 0.35781627893447876,
+      "outside_score": 0.35781627893447876,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.6904133558273315,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 25,
+          "maximum_probability": 0.2909933626651764,
+          "posterior_entropy": 2.4587910175323486,
+          "evidence_min": 0.22600020468235016,
+          "evidence_max": 0.41494688391685486
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 35,
+          "maximum_probability": 0.2998943328857422,
+          "posterior_entropy": 2.5541887283325195,
+          "evidence_min": 0.213849738240242,
+          "evidence_max": 0.41913557052612305
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 21,
+          "maximum_probability": 0.2695028781890869,
+          "posterior_entropy": 1.8572945594787598,
+          "evidence_min": 0.2118891328573227,
+          "evidence_max": 0.40751197934150696
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 21,
+          "maximum_probability": 0.38960614800453186,
+          "posterior_entropy": 2.0936200618743896,
+          "evidence_min": 0.21791353821754456,
+          "evidence_max": 0.403927743434906
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 0,
+        "rejected_small_seed_groups": 4,
+        "completed_points": 0,
+        "completed_fraction": 0.0,
+        "mean_completion_delta": 0.0,
+        "maximum_completion_delta": 0.0,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 0,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.0,
+        "mean_profile_candidate_gate": 0.0
+      }
+    },
+    "pumpkin": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 703161,
+      "mean_selected_group_support": 0.0192544125020504,
+      "mean_selected_group_probability": 0.004926831461489201,
+      "penalized_points": 301459,
+      "mean_penalty": 0.027736904099583626,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 842,
+      "outside_points": 285894,
+      "anchor_score": 0.34245288372039795,
+      "raw_anchor_score": 0.3564731180667877,
+      "semantic_preservation_score": 0.34245288372039795,
+      "outside_score": 0.34245288372039795,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.6291189789772034,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 18,
+          "maximum_probability": 0.2596632242202759,
+          "posterior_entropy": 2.1208438873291016,
+          "evidence_min": 0.2679177224636078,
+          "evidence_max": 0.3965812921524048
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 15,
+          "maximum_probability": 0.23972806334495544,
+          "posterior_entropy": 2.1493892669677734,
+          "evidence_min": 0.25928932428359985,
+          "evidence_max": 0.39191165566444397
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 17,
+          "maximum_probability": 0.22594846785068512,
+          "posterior_entropy": 2.2107250690460205,
+          "evidence_min": 0.2683257758617401,
+          "evidence_max": 0.40297284722328186
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 26,
+          "maximum_probability": 0.2804657816886902,
+          "posterior_entropy": 2.069643020629883,
+          "evidence_min": 0.2545827031135559,
+          "evidence_max": 0.39199206233024597
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 0,
+        "rejected_small_seed_groups": 4,
+        "completed_points": 0,
+        "completed_fraction": 0.0,
+        "mean_completion_delta": 0.0,
+        "maximum_completion_delta": 0.0,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 0,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.0,
+        "mean_profile_candidate_gate": 0.0
+      }
+    },
+    "red apple": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 706979,
+      "mean_selected_group_support": 0.01000485010445118,
+      "mean_selected_group_probability": 0.004482800140976906,
+      "penalized_points": 304186,
+      "mean_penalty": 0.02767089754343033,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 1933,
+      "outside_points": 295679,
+      "anchor_score": 0.25847214460372925,
+      "raw_anchor_score": 0.2594652771949768,
+      "semantic_preservation_score": 0.25847214460372925,
+      "outside_score": 0.25847214460372925,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.6257547736167908,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 10,
+          "maximum_probability": 0.5768711566925049,
+          "posterior_entropy": 1.2693774700164795,
+          "evidence_min": 0.18450528383255005,
+          "evidence_max": 0.39070284366607666
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 5,
+          "maximum_probability": 0.3859466314315796,
+          "posterior_entropy": 1.2864553928375244,
+          "evidence_min": 0.17378371953964233,
+          "evidence_max": 0.3639903664588928
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 8,
+          "maximum_probability": 0.49033015966415405,
+          "posterior_entropy": 1.0165786743164062,
+          "evidence_min": 0.1823747605085373,
+          "evidence_max": 0.39596885442733765
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 8,
+          "maximum_probability": 0.28831928968429565,
+          "posterior_entropy": 1.681302785873413,
+          "evidence_min": 0.18129423260688782,
+          "evidence_max": 0.3545372784137726
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 0,
+        "rejected_small_seed_groups": 4,
+        "completed_points": 0,
+        "completed_fraction": 0.0,
+        "mean_completion_delta": 0.0,
+        "maximum_completion_delta": 0.0,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 0,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.0,
+        "mean_profile_candidate_gate": 0.0
+      }
+    },
+    "red toy chair": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 706866,
+      "mean_selected_group_support": 0.008402985520660877,
+      "mean_selected_group_probability": 0.007750180084258318,
+      "penalized_points": 302581,
+      "mean_penalty": 0.03046966902911663,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 3425,
+      "outside_points": 302491,
+      "anchor_score": 0.24672216176986694,
+      "raw_anchor_score": 0.28987136483192444,
+      "semantic_preservation_score": 0.24672216176986694,
+      "outside_score": 0.24672216176986694,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.6920545697212219,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 2,
+          "maximum_probability": 0.987487256526947,
+          "posterior_entropy": 0.06725252419710159,
+          "evidence_min": 0.16292859613895416,
+          "evidence_max": 0.4846738874912262
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 3,
+          "maximum_probability": 0.8536803126335144,
+          "posterior_entropy": 0.41782838106155396,
+          "evidence_min": 0.15606829524040222,
+          "evidence_max": 0.42895254492759705
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 4,
+          "maximum_probability": 0.5504505634307861,
+          "posterior_entropy": 1.1142659187316895,
+          "evidence_min": 0.15652114152908325,
+          "evidence_max": 0.43409264087677
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 3,
+          "maximum_probability": 0.9564569592475891,
+          "posterior_entropy": 0.20849211513996124,
+          "evidence_min": 0.1394588202238083,
+          "evidence_max": 0.49565204977989197
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 4,
+        "rejected_small_seed_groups": 0,
+        "completed_points": 509,
+        "completed_fraction": 0.0006803057622164488,
+        "mean_completion_delta": 0.017603985965251923,
+        "maximum_completion_delta": 0.053050875663757324,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 4,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.08110999315977097,
+        "mean_profile_candidate_gate": 0.9683637171983719
+      }
+    },
+    "rubber duck with buoy": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 705403,
+      "mean_selected_group_support": 0.013594432733952999,
+      "mean_selected_group_probability": 0.007691452279686928,
+      "penalized_points": 299579,
+      "mean_penalty": 0.020058929920196533,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 4964,
+      "outside_points": 296423,
+      "anchor_score": 0.19346192479133606,
+      "raw_anchor_score": 0.19346192479133606,
+      "semantic_preservation_score": 0.22968119382858276,
+      "outside_score": 0.19346192479133606,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.45639514923095703,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 4,
+          "maximum_probability": 0.49407029151916504,
+          "posterior_entropy": 0.7902359366416931,
+          "evidence_min": 0.12827254831790924,
+          "evidence_max": 0.352529376745224
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 9,
+          "maximum_probability": 0.546676516532898,
+          "posterior_entropy": 0.8553651571273804,
+          "evidence_min": 0.11769794672727585,
+          "evidence_max": 0.3232538104057312
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 2,
+          "maximum_probability": 0.999354362487793,
+          "posterior_entropy": 0.005387889686971903,
+          "evidence_min": 0.1212945207953453,
+          "evidence_max": 0.4426697790622711
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 4,
+          "maximum_probability": 0.4243125915527344,
+          "posterior_entropy": 1.3006274700164795,
+          "evidence_min": 0.12365904450416565,
+          "evidence_max": 0.3717093765735626
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 3,
+        "certified_groups": 3,
+        "rejected_small_seed_groups": 0,
+        "completed_points": 706,
+        "completed_fraction": 0.0009436067775823176,
+        "mean_completion_delta": 0.004769063089042902,
+        "maximum_completion_delta": 0.07289421558380127,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 3,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.05815129602948824,
+        "mean_profile_candidate_gate": 0.9493323564529419
+      }
+    },
+    "rubber duck with hat": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 704679,
+      "mean_selected_group_support": 0.011887424625456333,
+      "mean_selected_group_probability": 0.007694851607084274,
+      "penalized_points": 298714,
+      "mean_penalty": 0.03212146461009979,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 5105,
+      "outside_points": 295951,
+      "anchor_score": 0.2736203968524933,
+      "raw_anchor_score": 0.3426702320575714,
+      "semantic_preservation_score": 0.2736203968524933,
+      "outside_score": 0.2736203968524933,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.7222176194190979,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 2,
+          "maximum_probability": 0.5973965525627136,
+          "posterior_entropy": 0.6740531921386719,
+          "evidence_min": 0.17835591733455658,
+          "evidence_max": 0.44015875458717346
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 3,
+          "maximum_probability": 0.5188222527503967,
+          "posterior_entropy": 0.6958223581314087,
+          "evidence_min": 0.16145877540111542,
+          "evidence_max": 0.36636021733283997
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 3,
+          "maximum_probability": 0.9889867305755615,
+          "posterior_entropy": 0.06382043659687042,
+          "evidence_min": 0.15428286790847778,
+          "evidence_max": 0.5065325498580933
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 4,
+          "maximum_probability": 0.42657971382141113,
+          "posterior_entropy": 1.1023372411727905,
+          "evidence_min": 0.1585286557674408,
+          "evidence_max": 0.43489834666252136
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 3,
+        "certified_groups": 3,
+        "rejected_small_seed_groups": 0,
+        "completed_points": 1101,
+        "completed_fraction": 0.0014715454308316112,
+        "mean_completion_delta": 0.005815776530653238,
+        "maximum_completion_delta": 0.06189519166946411,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 3,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.04891818886001905,
+        "mean_profile_candidate_gate": 0.9406862656275431
+      }
+    },
+    "rubics cube": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 706609,
+      "mean_selected_group_support": 0.3213968873023987,
+      "mean_selected_group_probability": 0.0734638124704361,
+      "penalized_points": 291730,
+      "mean_penalty": 0.030529305338859558,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 14038,
+      "outside_points": 207887,
+      "anchor_score": 0.41215118765830994,
+      "raw_anchor_score": 0.41215118765830994,
+      "semantic_preservation_score": 0.43379008769989014,
+      "outside_score": 0.41215118765830994,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.7008302807807922,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 13,
+          "maximum_probability": 0.2141294777393341,
+          "posterior_entropy": 2.1559700965881348,
+          "evidence_min": 0.2260739654302597,
+          "evidence_max": 0.43138599395751953
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 26,
+          "maximum_probability": 0.21226496994495392,
+          "posterior_entropy": 2.3558621406555176,
+          "evidence_min": 0.19641190767288208,
+          "evidence_max": 0.4471273124217987
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 17,
+          "maximum_probability": 0.2675248980522156,
+          "posterior_entropy": 2.014155626296997,
+          "evidence_min": 0.24244339764118195,
+          "evidence_max": 0.46945229172706604
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 16,
+          "maximum_probability": 0.4662359952926636,
+          "posterior_entropy": 1.7287324666976929,
+          "evidence_min": 0.21688541769981384,
+          "evidence_max": 0.48101282119750977
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 5,
+        "certified_groups": 1,
+        "rejected_small_seed_groups": 4,
+        "completed_points": 332,
+        "completed_fraction": 0.00044373577111400664,
+        "mean_completion_delta": 0.00851104874163866,
+        "maximum_completion_delta": 0.06762701272964478,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 1,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.06967412680387497,
+        "mean_profile_candidate_gate": 0.9161726236343384
+      }
+    },
+    "spatula": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 703017,
+      "mean_selected_group_support": 0.00424795551225543,
+      "mean_selected_group_probability": 0.001963667571544647,
+      "penalized_points": 302148,
+      "mean_penalty": 0.03237876668572426,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 9,
+      "outside_points": 296435,
+      "anchor_score": 0.45344099402427673,
+      "raw_anchor_score": 0.5594249367713928,
+      "semantic_preservation_score": 0.45344099402427673,
+      "outside_score": 0.45344099402427673,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.7220518589019775,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 17,
+          "maximum_probability": 0.48775139451026917,
+          "posterior_entropy": 1.7592549324035645,
+          "evidence_min": 0.3019338846206665,
+          "evidence_max": 0.5120289325714111
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 15,
+          "maximum_probability": 0.4575331509113312,
+          "posterior_entropy": 1.7272553443908691,
+          "evidence_min": 0.3456171751022339,
+          "evidence_max": 0.5491730570793152
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 16,
+          "maximum_probability": 0.4643060564994812,
+          "posterior_entropy": 1.6280603408813477,
+          "evidence_min": 0.30256837606430054,
+          "evidence_max": 0.5208649635314941
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 21,
+          "maximum_probability": 0.2677410840988159,
+          "posterior_entropy": 2.161693811416626,
+          "evidence_min": 0.30044931173324585,
+          "evidence_max": 0.4888729453086853
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 1,
+        "certified_groups": 1,
+        "rejected_small_seed_groups": 0,
+        "completed_points": 1,
+        "completed_fraction": 1.336553509645455e-06,
+        "mean_completion_delta": 0.05063319206237793,
+        "maximum_completion_delta": 0.05063319206237793,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 1,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.030151626095175743,
+        "mean_profile_candidate_gate": 0.5660767555236816
+      }
+    },
+    "tesla door handle": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 704530,
+      "mean_selected_group_support": 0.005615280009806156,
+      "mean_selected_group_probability": 0.002012716606259346,
+      "penalized_points": 303458,
+      "mean_penalty": 0.029292508959770203,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 212,
+      "outside_points": 291510,
+      "anchor_score": 0.4030047357082367,
+      "raw_anchor_score": 0.4030047357082367,
+      "semantic_preservation_score": 0.41943061351776123,
+      "outside_score": 0.4030047357082367,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.6509026885032654,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 18,
+          "maximum_probability": 0.4150071144104004,
+          "posterior_entropy": 1.7717177867889404,
+          "evidence_min": 0.2053908407688141,
+          "evidence_max": 0.46864739060401917
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 34,
+          "maximum_probability": 0.2999534010887146,
+          "posterior_entropy": 2.2151403427124023,
+          "evidence_min": 0.24937696754932404,
+          "evidence_max": 0.4648703336715698
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 23,
+          "maximum_probability": 0.331838458776474,
+          "posterior_entropy": 2.3468973636627197,
+          "evidence_min": 0.24926993250846863,
+          "evidence_max": 0.4907676577568054
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 14,
+          "maximum_probability": 0.2791280746459961,
+          "posterior_entropy": 1.9437702894210815,
+          "evidence_min": 0.19830645620822906,
+          "evidence_max": 0.4805421829223633
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 0,
+        "rejected_small_seed_groups": 4,
+        "completed_points": 0,
+        "completed_fraction": 0.0,
+        "mean_completion_delta": 0.0,
+        "maximum_completion_delta": 0.0,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 0,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.0,
+        "mean_profile_candidate_gate": 0.0
+      }
+    },
+    "toy cat statue": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 704131,
+      "mean_selected_group_support": 0.015388061292469501,
+      "mean_selected_group_probability": 0.010745694860816002,
+      "penalized_points": 299902,
+      "mean_penalty": 0.02835175208747387,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 3369,
+      "outside_points": 289442,
+      "anchor_score": 0.2991899847984314,
+      "raw_anchor_score": 0.3146297335624695,
+      "semantic_preservation_score": 0.2991899847984314,
+      "outside_score": 0.2991899847984314,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.6445063352584839,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 1,
+          "maximum_probability": 1.0,
+          "posterior_entropy": -0.0,
+          "evidence_min": 0.19796405732631683,
+          "evidence_max": 0.4834638237953186
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 15,
+          "maximum_probability": 0.28379708528518677,
+          "posterior_entropy": 1.9984683990478516,
+          "evidence_min": 0.18841680884361267,
+          "evidence_max": 0.372495174407959
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 12,
+          "maximum_probability": 0.4091460704803467,
+          "posterior_entropy": 1.4440479278564453,
+          "evidence_min": 0.18705235421657562,
+          "evidence_max": 0.39288243651390076
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 1,
+          "maximum_probability": 1.0,
+          "posterior_entropy": -0.0,
+          "evidence_min": 0.1802295595407486,
+          "evidence_max": 0.4813082814216614
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 3,
+        "certified_groups": 2,
+        "rejected_small_seed_groups": 1,
+        "completed_points": 888,
+        "completed_fraction": 0.0011868595611304045,
+        "mean_completion_delta": 0.07970681041479111,
+        "maximum_completion_delta": 0.0980164110660553,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 2,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.07552731037139893,
+        "mean_profile_candidate_gate": 0.9880708456039429
+      }
+    },
+    "toy elephant": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 705444,
+      "mean_selected_group_support": 0.05242057517170906,
+      "mean_selected_group_probability": 0.01705191656947136,
+      "penalized_points": 291732,
+      "mean_penalty": 0.021414706483483315,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 12852,
+      "outside_points": 251583,
+      "anchor_score": 0.26831620931625366,
+      "raw_anchor_score": 0.26831620931625366,
+      "semantic_preservation_score": 0.2944079041481018,
+      "outside_score": 0.26831620931625366,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.4799802601337433,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 23,
+          "maximum_probability": 0.41573408246040344,
+          "posterior_entropy": 2.147106409072876,
+          "evidence_min": 0.21530340611934662,
+          "evidence_max": 0.3678649365901947
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 20,
+          "maximum_probability": 0.18993432819843292,
+          "posterior_entropy": 2.39370059967041,
+          "evidence_min": 0.20611177384853363,
+          "evidence_max": 0.3236905336380005
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 19,
+          "maximum_probability": 0.3124150335788727,
+          "posterior_entropy": 2.11287784576416,
+          "evidence_min": 0.20295217633247375,
+          "evidence_max": 0.3547477126121521
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 32,
+          "maximum_probability": 0.2092241793870926,
+          "posterior_entropy": 2.5243306159973145,
+          "evidence_min": 0.20170755684375763,
+          "evidence_max": 0.3331284523010254
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 3,
+        "rejected_small_seed_groups": 1,
+        "completed_points": 2732,
+        "completed_fraction": 0.0036514641251415014,
+        "mean_completion_delta": 0.04805872216820717,
+        "maximum_completion_delta": 0.09760019183158875,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 3,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.06531163553396861,
+        "mean_profile_candidate_gate": 0.9767510096232096
+      }
+    },
+    "waldo": {
+      "semantic_covered_points": 324111,
+      "semantic_fallback_points": 424082,
+      "semantic_mean_valid_slots": 3.9893555641174316,
+      "spatial_covered_points": 707573,
+      "mean_selected_group_support": 0.028013665229082108,
+      "mean_selected_group_probability": 0.008431287482380867,
+      "penalized_points": 302158,
+      "mean_penalty": 0.017047708854079247,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 4555,
+      "outside_points": 266700,
+      "anchor_score": 0.3216363787651062,
+      "raw_anchor_score": 0.3216363787651062,
+      "semantic_preservation_score": 0.39925864338874817,
+      "outside_score": 0.3216363787651062,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.38379237055778503,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 205,
+          "active_groups": 16,
+          "maximum_probability": 0.34652331471443176,
+          "posterior_entropy": 1.9650275707244873,
+          "evidence_min": 0.24802511930465698,
+          "evidence_max": 0.4140608310699463
+        },
+        "level_1": {
+          "candidate_groups": 233,
+          "active_groups": 16,
+          "maximum_probability": 0.22681456804275513,
+          "posterior_entropy": 2.190009355545044,
+          "evidence_min": 0.24482938647270203,
+          "evidence_max": 0.41071513295173645
+        },
+        "level_2": {
+          "candidate_groups": 203,
+          "active_groups": 18,
+          "maximum_probability": 0.19989272952079773,
+          "posterior_entropy": 2.401916027069092,
+          "evidence_min": 0.2401227205991745,
+          "evidence_max": 0.44151681661605835
+        },
+        "level_3": {
+          "candidate_groups": 193,
+          "active_groups": 17,
+          "maximum_probability": 0.31452059745788574,
+          "posterior_entropy": 2.19111967086792,
+          "evidence_min": 0.24886198341846466,
+          "evidence_max": 0.4562293589115143
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 2,
+        "rejected_small_seed_groups": 2,
+        "completed_points": 104,
+        "completed_fraction": 0.00013900156773161143,
+        "mean_completion_delta": 0.008307878859341145,
+        "maximum_completion_delta": 0.023655176162719727,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 2,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.03822077065706253,
+        "mean_profile_candidate_gate": 0.8500172197818756
+      }
+    }
+  },
+  "group_feature_agreement_floor": -1.0,
+  "group_feature_agreement_power": 1.0,
+  "semantic_storage_bytes": 172346634,
+  "semantic_storage_megabytes": 164.36255836486816,
+  "semantic_keep_mask": null,
+  "semantic_kept_fraction": 1.0,
+  "label_dir": "/home/anlanfan/Dr-Splat/drsplat_data/lerf_ovs/label/figurines",
+  "num_label_frames": 4,
+  "num_categories": 21
+}

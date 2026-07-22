@@ -18,3 +18,4 @@ release
 *.jpg
 *.out
 shells
+outputs/INSID3.*

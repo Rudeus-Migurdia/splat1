@@ -30,6 +30,7 @@ def test_contract_accepts_four_independent_hierarchical_codebooks(tmp_path):
     np.save(tmp_path / "semantic_ids.npy", np.array([[0], [1], [0], [1]], dtype=np.uint16))
     np.save(tmp_path / "levels.npy", np.array([0, 1, 2, 3], dtype=np.uint8))
     np.save(tmp_path / "point_ids.npy", np.array([[0, 1, 2, 3]], dtype=np.uint16))
+    np.save(tmp_path / "point_error.npy", np.array([[0, 1, 127, 255]], dtype=np.uint8))
     (tmp_path / "manifest.json").write_text(
         json.dumps(
             {
@@ -38,6 +39,9 @@ def test_contract_accepts_four_independent_hierarchical_codebooks(tmp_path):
                 "semantic_invalid_id": 65535,
                 "group_level": "levels.npy",
                 "point_group_ids": "point_ids.npy",
+                "point_group_quantization_error": "point_error.npy",
+                "point_group_quantization_error_scale": 2.0 / 255.0,
+                "point_group_quantization_error_quantizer": "ceil_upper_bound",
                 "invalid_id": 65535,
                 "vocabulary_modalities": ["base", "sam_l0", "sam_l1", "sam_l2", "sam_l3"],
                 "modality_token_counts": {"base": 0, "sam_l0": 1, "sam_l1": 1, "sam_l2": 1, "sam_l3": 1},
@@ -55,3 +59,51 @@ def test_contract_accepts_four_independent_hierarchical_codebooks(tmp_path):
 
     assert result["independent_level_codebooks"] is True
     assert result["num_vocabulary_codes"] == 8
+    assert result["has_point_quantization_error"] is True
+
+
+def test_contract_rejects_misaligned_point_quantization_error(tmp_path):
+    for level in range(4):
+        np.save(tmp_path / f"l{level}.npy", np.eye(1, 3, dtype=np.float16))
+    np.save(tmp_path / "semantic_ids.npy", np.zeros((4, 1), dtype=np.uint16))
+    np.save(tmp_path / "levels.npy", np.arange(4, dtype=np.uint8))
+    np.save(tmp_path / "point_ids.npy", np.arange(4, dtype=np.uint16)[None])
+    np.save(tmp_path / "point_error.npy", np.zeros((1, 3), dtype=np.uint8))
+    (tmp_path / "manifest.json").write_text(
+        json.dumps(
+            {
+                "representation": "hierarchical_independent_group_codebooks",
+                "group_semantic_code_ids": "semantic_ids.npy",
+                "semantic_invalid_id": 65535,
+                "group_level": "levels.npy",
+                "point_group_ids": "point_ids.npy",
+                "point_group_quantization_error": "point_error.npy",
+                "point_group_quantization_error_scale": 2.0 / 255.0,
+                "point_group_quantization_error_quantizer": "ceil_upper_bound",
+                "invalid_id": 65535,
+                "vocabulary_modalities": [
+                    "base",
+                    "sam_l0",
+                    "sam_l1",
+                    "sam_l2",
+                    "sam_l3",
+                ],
+                "modality_token_counts": {
+                    "base": 0,
+                    "sam_l0": 1,
+                    "sam_l1": 1,
+                    "sam_l2": 1,
+                    "sam_l3": 1,
+                },
+                "level_codebooks": [
+                    {"level": level, "codebook": f"l{level}.npy", "num_codes": 1}
+                    for level in range(4)
+                ],
+            }
+        )
+    )
+
+    with pytest.raises(ValueError, match="quantization error must match"):
+        validate_contract(
+            tmp_path, ["base", "sam_l0", "sam_l1", "sam_l2", "sam_l3"]
+        )

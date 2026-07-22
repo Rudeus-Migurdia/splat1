@@ -1,0 +1,1798 @@
+{
+  "evaluation_protocol": "drsplat_3d_selection",
+  "selection_space": "per_gaussian_openclip_relevancy",
+  "selection_operator": ">",
+  "occupancy_threshold": 0.7,
+  "occupancy_operator": ">",
+  "threshold_summary": [
+    {
+      "num_samples": 71,
+      "mIoU": 0.3240518559887521,
+      "mAcc@0.25": 0.39436619718309857,
+      "mAcc@0.5": 0.30985915492957744,
+      "per_category": {
+        "bowl": 0.5584539435867992,
+        "chopsticks": 0.9069512412115597,
+        "corn": 0.0,
+        "egg": 0.09572893253125257,
+        "glass of water": 0.5742649020153527,
+        "hand": 0.3212809448103566,
+        "kamaboko": 0.0,
+        "napkin": 0.30934362086360917,
+        "nori": 0.8648766029834488,
+        "onion segments": 0.0,
+        "plate": 0.7788889515194102,
+        "sake cup": 0.07725565836166871,
+        "spoon": 0.12148446018116774,
+        "wavy noodles": 0.1669719561997045
+      },
+      "selection_threshold": 0.55,
+      "samples": [
+        {
+          "image_name": "frame_00006",
+          "category": "bowl",
+          "iou": 0.4894962793360046
+        },
+        {
+          "image_name": "frame_00024",
+          "category": "bowl",
+          "iou": 0.9020102915176882
+        },
+        {
+          "image_name": "frame_00065",
+          "category": "bowl",
+          "iou": 0.6191902117040973
+        },
+        {
+          "image_name": "frame_00081",
+          "category": "bowl",
+          "iou": 0.3683764678389905
+        },
+        {
+          "image_name": "frame_00128",
+          "category": "bowl",
+          "iou": 0.4131964675372154
+        },
+        {
+          "image_name": "frame_00006",
+          "category": "chopsticks",
+          "iou": 0.9073814201515576
+        },
+        {
+          "image_name": "frame_00024",
+          "category": "chopsticks",
+          "iou": 0.9180464264913887
+        },
+        {
+          "image_name": "frame_00060",
+          "category": "chopsticks",
+          "iou": 0.9047290035313987
+        },
+        {
+          "image_name": "frame_00065",
+          "category": "chopsticks",
+          "iou": 0.9001029866117405
+        },
+        {
+          "image_name": "frame_00081",
+          "category": "chopsticks",
+          "iou": 0.9484103179364127
+        },
+        {
+          "image_name": "frame_00119",
+          "category": "chopsticks",
+          "iou": 0.8635690485005554
+        },
+        {
+          "image_name": "frame_00128",
+          "category": "chopsticks",
+          "iou": 0.9064194852578641
+        },
+        {
+          "image_name": "frame_00024",
+          "category": "corn",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00060",
+          "category": "corn",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00065",
+          "category": "corn",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00119",
+          "category": "corn",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00128",
+          "category": "corn",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00006",
+          "category": "egg",
+          "iou": 0.08556076906887203
+        },
+        {
+          "image_name": "frame_00024",
+          "category": "egg",
+          "iou": 0.0803720079103799
+        },
+        {
+          "image_name": "frame_00060",
+          "category": "egg",
+          "iou": 0.09625184974965031
+        },
+        {
+          "image_name": "frame_00065",
+          "category": "egg",
+          "iou": 0.08134314187885507
+        },
+        {
+          "image_name": "frame_00081",
+          "category": "egg",
+          "iou": 0.10820416625530654
+        },
+        {
+          "image_name": "frame_00119",
+          "category": "egg",
+          "iou": 0.10292679298098673
+        },
+        {
+          "image_name": "frame_00128",
+          "category": "egg",
+          "iou": 0.11544379987471744
+        },
+        {
+          "image_name": "frame_00081",
+          "category": "glass of water",
+          "iou": 0.5581343780028087
+        },
+        {
+          "image_name": "frame_00128",
+          "category": "glass of water",
+          "iou": 0.5903954260278966
+        },
+        {
+          "image_name": "frame_00128",
+          "category": "hand",
+          "iou": 0.3212809448103566
+        },
+        {
+          "image_name": "frame_00006",
+          "category": "kamaboko",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00024",
+          "category": "kamaboko",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00060",
+          "category": "kamaboko",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00065",
+          "category": "kamaboko",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00081",
+          "category": "kamaboko",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00119",
+          "category": "kamaboko",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00128",
+          "category": "kamaboko",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00006",
+          "category": "napkin",
+          "iou": 0.34825507034533165
+        },
+        {
+          "image_name": "frame_00060",
+          "category": "napkin",
+          "iou": 0.8917717167086867
+        },
+        {
+          "image_name": "frame_00065",
+          "category": "napkin",
+          "iou": 0.1649230245811006
+        },
+        {
+          "image_name": "frame_00081",
+          "category": "napkin",
+          "iou": 0.14176829268292682
+        },
+        {
+          "image_name": "frame_00128",
+          "category": "napkin",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00006",
+          "category": "nori",
+          "iou": 0.8446425086201288
+        },
+        {
+          "image_name": "frame_00024",
+          "category": "nori",
+          "iou": 0.884102816875696
+        },
+        {
+          "image_name": "frame_00065",
+          "category": "nori",
+          "iou": 0.7783626987537602
+        },
+        {
+          "image_name": "frame_00081",
+          "category": "nori",
+          "iou": 0.9076874231059253
+        },
+        {
+          "image_name": "frame_00119",
+          "category": "nori",
+          "iou": 0.89562385909517
+        },
+        {
+          "image_name": "frame_00128",
+          "category": "nori",
+          "iou": 0.8788403114500131
+        },
+        {
+          "image_name": "frame_00006",
+          "category": "onion segments",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00024",
+          "category": "onion segments",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00060",
+          "category": "onion segments",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00065",
+          "category": "onion segments",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00081",
+          "category": "onion segments",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00119",
+          "category": "onion segments",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00128",
+          "category": "onion segments",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00006",
+          "category": "plate",
+          "iou": 0.8845763674728129
+        },
+        {
+          "image_name": "frame_00065",
+          "category": "plate",
+          "iou": 0.8564324431846437
+        },
+        {
+          "image_name": "frame_00081",
+          "category": "plate",
+          "iou": 0.6766187775314543
+        },
+        {
+          "image_name": "frame_00128",
+          "category": "plate",
+          "iou": 0.6979282178887296
+        },
+        {
+          "image_name": "frame_00006",
+          "category": "sake cup",
+          "iou": 0.2511079521699139
+        },
+        {
+          "image_name": "frame_00060",
+          "category": "sake cup",
+          "iou": 0.0
+        },
+        {
+          "image_name": "frame_00065",
+          "category": "sake cup",
+          "iou": 0.08853030963802878
+        },
+        {
+          "image_name": "frame_00081",
+          "category": "sake cup",
+          "iou": 0.017565839271265628
+        },
+        {
+          "image_name": "frame_00119",
+          "category": "sake cup",
+          "iou": 0.09637432631063204
+        },
+        {
+          "image_name": "frame_00128",
+          "category": "sake cup",
+          "iou": 0.009955522780171916
+        },
+        {
+          "image_name": "frame_00081",
+          "category": "spoon",
+          "iou": 0.07943608364686325
+        },
+        {
+          "image_name": "frame_00128",
+          "category": "spoon",
+          "iou": 0.16353283671547222
+        },
+        {
+          "image_name": "frame_00006",
+          "category": "wavy noodles",
+          "iou": 0.14182278939270523
+        },
+        {
+          "image_name": "frame_00024",
+          "category": "wavy noodles",
+          "iou": 0.1521796630395335
+        },
+        {
+          "image_name": "frame_00060",
+          "category": "wavy noodles",
+          "iou": 0.1607474555524169
+        },
+        {
+          "image_name": "frame_00065",
+          "category": "wavy noodles",
+          "iou": 0.12029604254013702
+        },
+        {
+          "image_name": "frame_00081",
+          "category": "wavy noodles",
+          "iou": 0.16290041230574057
+        },
+        {
+          "image_name": "frame_00119",
+          "category": "wavy noodles",
+          "iou": 0.2396013610151449
+        },
+        {
+          "image_name": "frame_00128",
+          "category": "wavy noodles",
+          "iou": 0.19125596955225327
+        }
+      ]
+    }
+  ],
+  "best_scene_threshold_diagnostic": {
+    "num_samples": 71,
+    "mIoU": 0.3240518559887521,
+    "mAcc@0.25": 0.39436619718309857,
+    "mAcc@0.5": 0.30985915492957744,
+    "per_category": {
+      "bowl": 0.5584539435867992,
+      "chopsticks": 0.9069512412115597,
+      "corn": 0.0,
+      "egg": 0.09572893253125257,
+      "glass of water": 0.5742649020153527,
+      "hand": 0.3212809448103566,
+      "kamaboko": 0.0,
+      "napkin": 0.30934362086360917,
+      "nori": 0.8648766029834488,
+      "onion segments": 0.0,
+      "plate": 0.7788889515194102,
+      "sake cup": 0.07725565836166871,
+      "spoon": 0.12148446018116774,
+      "wavy noodles": 0.1669719561997045
+    },
+    "selection_threshold": 0.55
+  },
+  "note": "Paper-style LeRF-OVS 3D object selection: threshold Gaussian relevancy before rendering, binarize rendered occupancy, and average IoU over annotation-view samples. Use scripts/summarize_lerf_ovs_paper.py on all four scenes to select one threshold per method and obtain final scores.",
+  "source_path": "/home/anlanfan/Dr-Splat/drsplat_data/lerf_ovs/ramen",
+  "model_path": "/mnt/zju105100248/home/anlanfan/a60_conformal_token_profile_20260722_014050/ramen/model_shadow",
+  "geometry_checkpoint": "/home/anlanfan/Dr-Splat/runs/3dgs/ramen/chkpnt30000.pth",
+  "geometry_checkpoint_iteration": 30000,
+  "codebook_dir": "/home/anlanfan/Dr-Splat/runs/a14_e8_joint32k_20260716/ramen/pruned_candidate_ids",
+  "consensus_path": null,
+  "codebook_manifest": {
+    "format_version": 1,
+    "representation": "gaussian_adaptive_shared_codebook",
+    "feature_dim": 512,
+    "num_gaussians": 726084,
+    "num_valid_gaussians": 222335,
+    "valid_fraction": 0.3062111270872241,
+    "num_codes": 32768,
+    "id_slots": 2,
+    "minimum_ids_per_valid_gaussian": 1,
+    "uses_consensus_capacity": false,
+    "fills_consensus_capacity": false,
+    "requested_average_capacity": 2.0,
+    "storage_layout": "base_plus_sparse_overflow",
+    "codebook_files": [
+      "codebook_shared.npy"
+    ],
+    "point_code_ids": "point_code_ids.npy",
+    "overflow_point_ids": "overflow_point_ids.npy",
+    "overflow_code_ids": "overflow_code_ids.npy",
+    "overflow_slots": "overflow_slots.npy",
+    "overflow_weights": "overflow_weights.npy",
+    "valid_mask": "valid_mask.npy",
+    "id_dtype": "uint16",
+    "invalid_id": 65535,
+    "weight_dtype": "uint8_relative",
+    "average_ids_per_valid_gaussian": 1.9969325567274607,
+    "id_count_histogram": {
+      "1": 682,
+      "2": 221653
+    },
+    "mean_reconstruction_cosine": 0.9983318448066711,
+    "std_reconstruction_cosine": 0.0025470461696386337,
+    "min_reconstruction_cosine": 0.8467929363250732,
+    "storage": {
+      "codebook_bytes_fp16": 33554560,
+      "point_id_bytes": 1895474,
+      "overflow_point_bytes": 886612,
+      "overflow_slot_bytes": 221653,
+      "point_weight_bytes": 221653,
+      "valid_mask_bytes": 726084,
+      "total_semantic_bytes": 37506036,
+      "full_per_gaussian_fp16_bytes": 743510016,
+      "compression_ratio_vs_512d_fp16": 19.823742930337932,
+      "bytes_per_gaussian_amortized": 51.655229973391506
+    },
+    "source": {
+      "type": "counterfactual_capacity_pruned_codebook",
+      "artifact_dir": "/home/anlanfan/Dr-Splat/runs/a14_e8_joint32k_20260716/ramen/candidate_ids",
+      "keep_mask": "/home/anlanfan/Dr-Splat/runs/a14_e8_joint32k_20260716/ramen/candidate_mask.npy"
+    },
+    "args": {
+      "consensus": "/home/anlanfan/Dr-Splat/runs/a6_responsibility_multiscene_20260715/ramen/consensus_alpha050.pt",
+      "codebook": "/home/anlanfan/Dr-Splat/runs/a14_e8_joint32k_20260716/ramen/joint_vocabulary/codebook_shared.npy",
+      "num_codes": 32768,
+      "max_ids": 2,
+      "min_ids": 2,
+      "use_consensus_capacity": false,
+      "fill_consensus_capacity": false,
+      "min_cosine_gain": 0.0,
+      "target_cosine": 1.0,
+      "train_samples": 262144,
+      "iterations": 25,
+      "assignment_chunk": 4096,
+      "faiss_gpu": true,
+      "seed": 20260716,
+      "output_dir": "/home/anlanfan/Dr-Splat/runs/a14_e8_joint32k_20260716/ramen/candidate_ids"
+    }
+  },
+  "object_codebook_dir": null,
+  "object_codebook_manifest": null,
+  "object_feature_weight": 0.0,
+  "query_route_base_codebook_dir": "/home/anlanfan/Dr-Splat/runs/a14_e8_joint32k_20260716/ramen/base_ids",
+  "query_route_base_codebook_manifest": {
+    "format_version": 1,
+    "representation": "gaussian_adaptive_shared_codebook",
+    "feature_dim": 512,
+    "num_gaussians": 726084,
+    "num_valid_gaussians": 624970,
+    "valid_fraction": 0.8607406305606514,
+    "num_codes": 32768,
+    "id_slots": 2,
+    "minimum_ids_per_valid_gaussian": 2,
+    "uses_consensus_capacity": false,
+    "fills_consensus_capacity": false,
+    "requested_average_capacity": 2.0,
+    "storage_layout": "base_plus_sparse_overflow",
+    "codebook_files": [
+      "codebook_shared.npy"
+    ],
+    "point_code_ids": "point_code_ids.npy",
+    "overflow_point_ids": "overflow_point_ids.npy",
+    "overflow_code_ids": "overflow_code_ids.npy",
+    "overflow_slots": "overflow_slots.npy",
+    "overflow_weights": "overflow_weights.npy",
+    "valid_mask": "valid_mask.npy",
+    "id_dtype": "uint16",
+    "invalid_id": 65535,
+    "weight_dtype": "uint8_relative",
+    "average_ids_per_valid_gaussian": 1.9781733523209113,
+    "id_count_histogram": {
+      "1": 13641,
+      "2": 611329
+    },
+    "mean_reconstruction_cosine": 0.9989933371543884,
+    "std_reconstruction_cosine": 0.002083477796986699,
+    "min_reconstruction_cosine": 0.8467929363250732,
+    "storage": {
+      "codebook_bytes_fp16": 33554432,
+      "point_id_bytes": 2674826,
+      "overflow_point_bytes": 2445316,
+      "overflow_slot_bytes": 611329,
+      "point_weight_bytes": 611329,
+      "valid_mask_bytes": 726084,
+      "total_semantic_bytes": 40623316,
+      "full_per_gaussian_fp16_bytes": 743510016,
+      "compression_ratio_vs_512d_fp16": 18.302543691903438,
+      "bytes_per_gaussian_amortized": 55.94850733523945
+    },
+    "source": {
+      "type": "self_trained_2d_consensus",
+      "consensus": "/home/anlanfan/Dr-Splat/runs/a14_signed_ownership_20260716/ramen/fused_w1p5_t005.pt",
+      "note": "Initialized directly from frozen 2D semantic observations, without a 3D teacher."
+    },
+    "args": {
+      "consensus": "/home/anlanfan/Dr-Splat/runs/a14_signed_ownership_20260716/ramen/fused_w1p5_t005.pt",
+      "codebook": "/home/anlanfan/Dr-Splat/runs/a14_e8_joint32k_20260716/ramen/joint_vocabulary/codebook_shared.npy",
+      "num_codes": 32768,
+      "max_ids": 2,
+      "min_ids": 2,
+      "use_consensus_capacity": false,
+      "fill_consensus_capacity": false,
+      "min_cosine_gain": 0.0,
+      "target_cosine": 1.0,
+      "train_samples": 262144,
+      "iterations": 25,
+      "assignment_chunk": 4096,
+      "faiss_gpu": true,
+      "seed": 20260716,
+      "output_dir": "/home/anlanfan/Dr-Splat/runs/a14_e8_joint32k_20260716/ramen/base_ids"
+    }
+  },
+  "codebook_query_route": "query_positive",
+  "query_route_candidate_mask": null,
+  "query_route_candidate_mask_fraction": 1.0,
+  "discrete_route_diagnostics": {
+    "bowl": {
+      "candidate_fraction": 0.1188347339630127
+    },
+    "chopsticks": {
+      "candidate_fraction": 0.11763515323400497
+    },
+    "corn": {
+      "candidate_fraction": 0.1945367157459259
+    },
+    "egg": {
+      "candidate_fraction": 0.1434076577425003
+    },
+    "glass of water": {
+      "candidate_fraction": 0.14676125347614288
+    },
+    "hand": {
+      "candidate_fraction": 0.14775563776493073
+    },
+    "kamaboko": {
+      "candidate_fraction": 0.14058290421962738
+    },
+    "napkin": {
+      "candidate_fraction": 0.16520953178405762
+    },
+    "nori": {
+      "candidate_fraction": 0.13407814502716064
+    },
+    "onion segments": {
+      "candidate_fraction": 0.19012124836444855
+    },
+    "plate": {
+      "candidate_fraction": 0.12712165713310242
+    },
+    "sake cup": {
+      "candidate_fraction": 0.11859647184610367
+    },
+    "spoon": {
+      "candidate_fraction": 0.13798128068447113
+    },
+    "wavy noodles": {
+      "candidate_fraction": 0.14265291392803192
+    }
+  },
+  "hypothesis_dir": null,
+  "hypothesis_manifest": null,
+  "hypothesis_readout": "switch",
+  "hypothesis_query_margin": false,
+  "group_codebook": "/home/anlanfan/Dr-Splat/runs/a52_query_conditioned_spatial_posterior_20260721_213802/ramen/fresh_equal_four_token_memory",
+  "group_assignments": null,
+  "group_hierarchy_dir": "/home/anlanfan/Dr-Splat/runs/a52_query_conditioned_spatial_posterior_20260721_213802/ramen/fresh_equal_four_token_memory",
+  "group_relation_graph_dir": null,
+  "group_relation_graph_manifest": null,
+  "group_counterfactual_codebook_dir": null,
+  "group_counterfactual_codebook_manifest": null,
+  "group_relation_positive_strength": 0.2,
+  "group_relation_negative_strength": 0.1,
+  "group_relation_maximum_delta": 0.05,
+  "rgr_alpha": 0.0,
+  "rgr_mode": "positive",
+  "group_topk": 4,
+  "group_aggregation": "weighted",
+  "group_score_power": 1.0,
+  "point_gate_floor": 0.1,
+  "point_gate_power": 1.0,
+  "group_membership_confidence": false,
+  "group_readout": "equal_query_profile_group_completion",
+  "group_query_temperature": 0.05,
+  "group_query_tie_margin": 0.0,
+  "group_quantization_uncertainty_scale": 0.05,
+  "group_level_margin_threshold": 0.25,
+  "group_level_margin_temperature": 0.1,
+  "group_competitor_weight": 1.0,
+  "group_route_fraction": 1.0,
+  "group_route_priority": "query_gain",
+  "route_diagnostics": {
+    "bowl": {
+      "semantic_covered_points": 625370,
+      "semantic_fallback_points": 100714,
+      "semantic_mean_valid_slots": 3.9951083660125732,
+      "spatial_covered_points": 658844,
+      "mean_selected_group_support": 0.01930037885904312,
+      "mean_selected_group_probability": 0.010239946655929089,
+      "penalized_points": 566929,
+      "mean_penalty": 0.03216569870710373,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 6869,
+      "outside_points": 547934,
+      "anchor_score": 0.5491416454315186,
+      "raw_anchor_score": 0.6833423376083374,
+      "semantic_preservation_score": 0.5491416454315186,
+      "outside_score": 0.5491416454315186,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.7093579173088074,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 247,
+          "active_groups": 10,
+          "maximum_probability": 0.4746994078159332,
+          "posterior_entropy": 1.3555140495300293,
+          "evidence_min": 0.3721848726272583,
+          "evidence_max": 0.6564802527427673
+        },
+        "level_1": {
+          "candidate_groups": 232,
+          "active_groups": 9,
+          "maximum_probability": 0.650903046131134,
+          "posterior_entropy": 1.0967826843261719,
+          "evidence_min": 0.3611758053302765,
+          "evidence_max": 0.6674113273620605
+        },
+        "level_2": {
+          "candidate_groups": 230,
+          "active_groups": 12,
+          "maximum_probability": 0.3881388306617737,
+          "posterior_entropy": 1.6402323246002197,
+          "evidence_min": 0.37178900837898254,
+          "evidence_max": 0.660539984703064
+        },
+        "level_3": {
+          "candidate_groups": 194,
+          "active_groups": 10,
+          "maximum_probability": 0.5429333448410034,
+          "posterior_entropy": 1.3255174160003662,
+          "evidence_min": 0.37687212228775024,
+          "evidence_max": 0.6773355603218079
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 4,
+        "rejected_small_seed_groups": 0,
+        "completed_points": 3792,
+        "completed_fraction": 0.0052225361578166485,
+        "mean_completion_delta": 0.015527632087469101,
+        "maximum_completion_delta": 0.09349209070205688,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 4,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.0400572344660759,
+        "mean_profile_candidate_gate": 0.8757206201553345
+      }
+    },
+    "chopsticks": {
+      "semantic_covered_points": 625370,
+      "semantic_fallback_points": 100714,
+      "semantic_mean_valid_slots": 3.9951083660125732,
+      "spatial_covered_points": 663179,
+      "mean_selected_group_support": 0.024565398693084717,
+      "mean_selected_group_probability": 0.010889563709497452,
+      "penalized_points": 569746,
+      "mean_penalty": 0.03215428814291954,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 8386,
+      "outside_points": 561568,
+      "anchor_score": 0.401682049036026,
+      "raw_anchor_score": 0.4304972290992737,
+      "semantic_preservation_score": 0.401682049036026,
+      "outside_score": 0.401682049036026,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.708785891532898,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 247,
+          "active_groups": 4,
+          "maximum_probability": 0.48779216408729553,
+          "posterior_entropy": 1.0488052368164062,
+          "evidence_min": 0.21314889192581177,
+          "evidence_max": 0.5966554284095764
+        },
+        "level_1": {
+          "candidate_groups": 232,
+          "active_groups": 4,
+          "maximum_probability": 0.5590505003929138,
+          "posterior_entropy": 1.048606038093567,
+          "evidence_min": 0.22530607879161835,
+          "evidence_max": 0.5737820267677307
+        },
+        "level_2": {
+          "candidate_groups": 230,
+          "active_groups": 4,
+          "maximum_probability": 0.5015720725059509,
+          "posterior_entropy": 1.0431320667266846,
+          "evidence_min": 0.2067311406135559,
+          "evidence_max": 0.5706790685653687
+        },
+        "level_3": {
+          "candidate_groups": 194,
+          "active_groups": 5,
+          "maximum_probability": 0.3272896707057953,
+          "posterior_entropy": 1.4966070652008057,
+          "evidence_min": 0.22010518610477448,
+          "evidence_max": 0.589030385017395
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 4,
+        "rejected_small_seed_groups": 0,
+        "completed_points": 4294,
+        "completed_fraction": 0.005913916509598494,
+        "mean_completion_delta": 0.016778722405433655,
+        "maximum_completion_delta": 0.09321653842926025,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 4,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.043098319321870804,
+        "mean_profile_candidate_gate": 0.88001748919487
+      }
+    },
+    "corn": {
+      "semantic_covered_points": 625370,
+      "semantic_fallback_points": 100714,
+      "semantic_mean_valid_slots": 3.9951083660125732,
+      "spatial_covered_points": 650533,
+      "mean_selected_group_support": 0.026293925940990448,
+      "mean_selected_group_probability": 0.007102024741470814,
+      "penalized_points": 560207,
+      "mean_penalty": 0.03064848855137825,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 5279,
+      "outside_points": 524964,
+      "anchor_score": 0.43647143244743347,
+      "raw_anchor_score": 0.46554699540138245,
+      "semantic_preservation_score": 0.43647143244743347,
+      "outside_score": 0.43647143244743347,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.6872642636299133,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 247,
+          "active_groups": 23,
+          "maximum_probability": 0.21894845366477966,
+          "posterior_entropy": 2.412173271179199,
+          "evidence_min": 0.3322940468788147,
+          "evidence_max": 0.4857023060321808
+        },
+        "level_1": {
+          "candidate_groups": 232,
+          "active_groups": 20,
+          "maximum_probability": 0.29450419545173645,
+          "posterior_entropy": 2.2312777042388916,
+          "evidence_min": 0.32193896174430847,
+          "evidence_max": 0.49684131145477295
+        },
+        "level_2": {
+          "candidate_groups": 230,
+          "active_groups": 19,
+          "maximum_probability": 0.3188509941101074,
+          "posterior_entropy": 2.1428027153015137,
+          "evidence_min": 0.3237958550453186,
+          "evidence_max": 0.507825493812561
+        },
+        "level_3": {
+          "candidate_groups": 194,
+          "active_groups": 21,
+          "maximum_probability": 0.25614994764328003,
+          "posterior_entropy": 2.3819453716278076,
+          "evidence_min": 0.33141398429870605,
+          "evidence_max": 0.4908998906612396
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 2,
+        "rejected_small_seed_groups": 2,
+        "completed_points": 898,
+        "completed_fraction": 0.0012367714662104845,
+        "mean_completion_delta": 0.010295962914824486,
+        "maximum_completion_delta": 0.08471834659576416,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 2,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.05209934711456299,
+        "mean_profile_candidate_gate": 0.7341392636299133
+      }
+    },
+    "egg": {
+      "semantic_covered_points": 625370,
+      "semantic_fallback_points": 100714,
+      "semantic_mean_valid_slots": 3.9951083660125732,
+      "spatial_covered_points": 656395,
+      "mean_selected_group_support": 0.03443587198853493,
+      "mean_selected_group_probability": 0.013931595720350742,
+      "penalized_points": 552765,
+      "mean_penalty": 0.031233450397849083,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 18583,
+      "outside_points": 548701,
+      "anchor_score": 0.5158634185791016,
+      "raw_anchor_score": 0.5904983878135681,
+      "semantic_preservation_score": 0.5158634185791016,
+      "outside_score": 0.5158634185791016,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.6722545027732849,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 247,
+          "active_groups": 8,
+          "maximum_probability": 0.5006987452507019,
+          "posterior_entropy": 1.0104498863220215,
+          "evidence_min": 0.4121887683868408,
+          "evidence_max": 0.6456141471862793
+        },
+        "level_1": {
+          "candidate_groups": 232,
+          "active_groups": 4,
+          "maximum_probability": 0.6766402721405029,
+          "posterior_entropy": 0.8372853994369507,
+          "evidence_min": 0.4093926250934601,
+          "evidence_max": 0.6861975789070129
+        },
+        "level_2": {
+          "candidate_groups": 230,
+          "active_groups": 3,
+          "maximum_probability": 0.533432126045227,
+          "posterior_entropy": 0.6909509301185608,
+          "evidence_min": 0.4118589162826538,
+          "evidence_max": 0.6514240503311157
+        },
+        "level_3": {
+          "candidate_groups": 194,
+          "active_groups": 6,
+          "maximum_probability": 0.3287610411643982,
+          "posterior_entropy": 1.3798125982284546,
+          "evidence_min": 0.4021938145160675,
+          "evidence_max": 0.617246687412262
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 4,
+        "rejected_small_seed_groups": 0,
+        "completed_points": 9555,
+        "completed_fraction": 0.013159634545445442,
+        "mean_completion_delta": 0.013940318487584591,
+        "maximum_completion_delta": 0.09541302919387817,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 4,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.04305056668817997,
+        "mean_profile_candidate_gate": 0.9430301487445831
+      }
+    },
+    "glass of water": {
+      "semantic_covered_points": 625370,
+      "semantic_fallback_points": 100714,
+      "semantic_mean_valid_slots": 3.9951083660125732,
+      "spatial_covered_points": 660261,
+      "mean_selected_group_support": 0.010459442622959614,
+      "mean_selected_group_probability": 0.004618444480001926,
+      "penalized_points": 570974,
+      "mean_penalty": 0.029561076313257217,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 4838,
+      "outside_points": 565812,
+      "anchor_score": 0.32688793540000916,
+      "raw_anchor_score": 0.6113643050193787,
+      "semantic_preservation_score": 0.32688793540000916,
+      "outside_score": 0.32688793540000916,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.6950581073760986,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 247,
+          "active_groups": 6,
+          "maximum_probability": 0.4500209093093872,
+          "posterior_entropy": 1.2928719520568848,
+          "evidence_min": 0.19822703301906586,
+          "evidence_max": 0.6428235769271851
+        },
+        "level_1": {
+          "candidate_groups": 232,
+          "active_groups": 7,
+          "maximum_probability": 0.30056294798851013,
+          "posterior_entropy": 1.5201363563537598,
+          "evidence_min": 0.20222502946853638,
+          "evidence_max": 0.5181089639663696
+        },
+        "level_2": {
+          "candidate_groups": 230,
+          "active_groups": 5,
+          "maximum_probability": 0.5710594654083252,
+          "posterior_entropy": 1.0486184358596802,
+          "evidence_min": 0.206373929977417,
+          "evidence_max": 0.6543322205543518
+        },
+        "level_3": {
+          "candidate_groups": 194,
+          "active_groups": 6,
+          "maximum_probability": 0.4566168189048767,
+          "posterior_entropy": 1.102716088294983,
+          "evidence_min": 0.17617960274219513,
+          "evidence_max": 0.6177927851676941
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 5,
+        "certified_groups": 5,
+        "rejected_small_seed_groups": 0,
+        "completed_points": 2557,
+        "completed_fraction": 0.0035216312389820814,
+        "mean_completion_delta": 0.027342772111296654,
+        "maximum_completion_delta": 0.09438318014144897,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 5,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.05411780327558517,
+        "mean_profile_candidate_gate": 0.9408124446868896
+      }
+    },
+    "hand": {
+      "semantic_covered_points": 625370,
+      "semantic_fallback_points": 100714,
+      "semantic_mean_valid_slots": 3.9951083660125732,
+      "spatial_covered_points": 655012,
+      "mean_selected_group_support": 0.03514239564538002,
+      "mean_selected_group_probability": 0.005536982789635658,
+      "penalized_points": 568383,
+      "mean_penalty": 0.026251032948493958,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 1582,
+      "outside_points": 469217,
+      "anchor_score": 0.5393059253692627,
+      "raw_anchor_score": 0.54157954454422,
+      "semantic_preservation_score": 0.5393059253692627,
+      "outside_score": 0.5393059253692627,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.6059905886650085,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 247,
+          "active_groups": 77,
+          "maximum_probability": 0.19188393652439117,
+          "posterior_entropy": 3.4149580001831055,
+          "evidence_min": 0.45677807927131653,
+          "evidence_max": 0.5653371214866638
+        },
+        "level_1": {
+          "candidate_groups": 232,
+          "active_groups": 86,
+          "maximum_probability": 0.2440062165260315,
+          "posterior_entropy": 3.3097176551818848,
+          "evidence_min": 0.4615684449672699,
+          "evidence_max": 0.5684974193572998
+        },
+        "level_2": {
+          "candidate_groups": 230,
+          "active_groups": 75,
+          "maximum_probability": 0.11424542963504791,
+          "posterior_entropy": 3.493187427520752,
+          "evidence_min": 0.46085548400878906,
+          "evidence_max": 0.5540568828582764
+        },
+        "level_3": {
+          "candidate_groups": 194,
+          "active_groups": 65,
+          "maximum_probability": 0.12345616519451141,
+          "posterior_entropy": 3.3432164192199707,
+          "evidence_min": 0.46174368262290955,
+          "evidence_max": 0.5585809350013733
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 4,
+        "rejected_small_seed_groups": 0,
+        "completed_points": 912,
+        "completed_fraction": 0.0012560529867187142,
+        "mean_completion_delta": 0.025297114625573158,
+        "maximum_completion_delta": 0.07960280776023865,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 4,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.03973514586687088,
+        "mean_profile_candidate_gate": 0.9555110931396484
+      }
+    },
+    "kamaboko": {
+      "semantic_covered_points": 625370,
+      "semantic_fallback_points": 100714,
+      "semantic_mean_valid_slots": 3.9951083660125732,
+      "spatial_covered_points": 651941,
+      "mean_selected_group_support": 0.01793941669166088,
+      "mean_selected_group_probability": 0.007310116197913885,
+      "penalized_points": 566136,
+      "mean_penalty": 0.030853375792503357,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 758,
+      "outside_points": 524907,
+      "anchor_score": 0.3986317217350006,
+      "raw_anchor_score": 0.47916802763938904,
+      "semantic_preservation_score": 0.3986317217350006,
+      "outside_score": 0.3986317217350006,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.6888492107391357,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 247,
+          "active_groups": 10,
+          "maximum_probability": 0.3787480890750885,
+          "posterior_entropy": 1.7227940559387207,
+          "evidence_min": 0.25132250785827637,
+          "evidence_max": 0.5294460654258728
+        },
+        "level_1": {
+          "candidate_groups": 232,
+          "active_groups": 9,
+          "maximum_probability": 0.28812921047210693,
+          "posterior_entropy": 1.6174867153167725,
+          "evidence_min": 0.25356462597846985,
+          "evidence_max": 0.5163313746452332
+        },
+        "level_2": {
+          "candidate_groups": 230,
+          "active_groups": 12,
+          "maximum_probability": 0.2534872591495514,
+          "posterior_entropy": 1.9025177955627441,
+          "evidence_min": 0.2509396970272064,
+          "evidence_max": 0.5117312073707581
+        },
+        "level_3": {
+          "candidate_groups": 194,
+          "active_groups": 9,
+          "maximum_probability": 0.566667377948761,
+          "posterior_entropy": 1.4097789525985718,
+          "evidence_min": 0.25021129846572876,
+          "evidence_max": 0.5476941466331482
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 1,
+        "rejected_small_seed_groups": 3,
+        "completed_points": 100,
+        "completed_fraction": 0.00013772511738352478,
+        "mean_completion_delta": 0.05792636796832085,
+        "maximum_completion_delta": 0.08404368162155151,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 1,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.0472145602107048,
+        "mean_profile_candidate_gate": 0.7889169454574585
+      }
+    },
+    "napkin": {
+      "semantic_covered_points": 625370,
+      "semantic_fallback_points": 100714,
+      "semantic_mean_valid_slots": 3.9951083660125732,
+      "spatial_covered_points": 651058,
+      "mean_selected_group_support": 0.008807729929685593,
+      "mean_selected_group_probability": 0.005651040468364954,
+      "penalized_points": 562364,
+      "mean_penalty": 0.030293090268969536,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 3647,
+      "outside_points": 554767,
+      "anchor_score": 0.40733128786087036,
+      "raw_anchor_score": 0.464365154504776,
+      "semantic_preservation_score": 0.40733128786087036,
+      "outside_score": 0.40733128786087036,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.688066840171814,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 247,
+          "active_groups": 4,
+          "maximum_probability": 0.8029438257217407,
+          "posterior_entropy": 0.6293562650680542,
+          "evidence_min": 0.2869246006011963,
+          "evidence_max": 0.5973120331764221
+        },
+        "level_1": {
+          "candidate_groups": 232,
+          "active_groups": 7,
+          "maximum_probability": 0.5568134784698486,
+          "posterior_entropy": 1.3029704093933105,
+          "evidence_min": 0.29010912775993347,
+          "evidence_max": 0.5624596476554871
+        },
+        "level_2": {
+          "candidate_groups": 230,
+          "active_groups": 3,
+          "maximum_probability": 0.6624383330345154,
+          "posterior_entropy": 0.8732606172561646,
+          "evidence_min": 0.2865310609340668,
+          "evidence_max": 0.5881534814834595
+        },
+        "level_3": {
+          "candidate_groups": 194,
+          "active_groups": 5,
+          "maximum_probability": 0.6703065037727356,
+          "posterior_entropy": 0.9088467359542847,
+          "evidence_min": 0.2915540337562561,
+          "evidence_max": 0.565585732460022
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 4,
+        "rejected_small_seed_groups": 0,
+        "completed_points": 1411,
+        "completed_fraction": 0.001943301293067634,
+        "mean_completion_delta": 0.018906883895397186,
+        "maximum_completion_delta": 0.09252125024795532,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 4,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.047226701863110065,
+        "mean_profile_candidate_gate": 0.9400268197059631
+      }
+    },
+    "nori": {
+      "semantic_covered_points": 625370,
+      "semantic_fallback_points": 100714,
+      "semantic_mean_valid_slots": 3.9951083660125732,
+      "spatial_covered_points": 648513,
+      "mean_selected_group_support": 0.015732478350400925,
+      "mean_selected_group_probability": 0.005455047823488712,
+      "penalized_points": 562000,
+      "mean_penalty": 0.03116949461400509,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 1466,
+      "outside_points": 517778,
+      "anchor_score": 0.4868107736110687,
+      "raw_anchor_score": 0.5795595645904541,
+      "semantic_preservation_score": 0.4868107736110687,
+      "outside_score": 0.4868107736110687,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.697777271270752,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 247,
+          "active_groups": 7,
+          "maximum_probability": 0.38224858045578003,
+          "posterior_entropy": 1.473630428314209,
+          "evidence_min": 0.35397911071777344,
+          "evidence_max": 0.5968679189682007
+        },
+        "level_1": {
+          "candidate_groups": 232,
+          "active_groups": 8,
+          "maximum_probability": 0.3041413128376007,
+          "posterior_entropy": 1.8401128053665161,
+          "evidence_min": 0.3581985831260681,
+          "evidence_max": 0.5807269811630249
+        },
+        "level_2": {
+          "candidate_groups": 230,
+          "active_groups": 9,
+          "maximum_probability": 0.4304489493370056,
+          "posterior_entropy": 1.451202630996704,
+          "evidence_min": 0.35664230585098267,
+          "evidence_max": 0.5969750881195068
+        },
+        "level_3": {
+          "candidate_groups": 194,
+          "active_groups": 10,
+          "maximum_probability": 0.32622355222702026,
+          "posterior_entropy": 1.703957200050354,
+          "evidence_min": 0.3626883029937744,
+          "evidence_max": 0.5901038646697998
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 3,
+        "rejected_small_seed_groups": 1,
+        "completed_points": 903,
+        "completed_fraction": 0.0012436577817425132,
+        "mean_completion_delta": 0.010670246556401253,
+        "maximum_completion_delta": 0.09238317608833313,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 3,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.03355413923660914,
+        "mean_profile_candidate_gate": 0.9103976488113403
+      }
+    },
+    "onion segments": {
+      "semantic_covered_points": 625370,
+      "semantic_fallback_points": 100714,
+      "semantic_mean_valid_slots": 3.9951083660125732,
+      "spatial_covered_points": 651488,
+      "mean_selected_group_support": 0.02076004445552826,
+      "mean_selected_group_probability": 0.005863812752068043,
+      "penalized_points": 561050,
+      "mean_penalty": 0.03092648647725582,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 5468,
+      "outside_points": 538206,
+      "anchor_score": 0.41002893447875977,
+      "raw_anchor_score": 0.44857561588287354,
+      "semantic_preservation_score": 0.41002893447875977,
+      "outside_score": 0.41002893447875977,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.6809319853782654,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 247,
+          "active_groups": 17,
+          "maximum_probability": 0.20724651217460632,
+          "posterior_entropy": 2.305917263031006,
+          "evidence_min": 0.26628491282463074,
+          "evidence_max": 0.4636254906654358
+        },
+        "level_1": {
+          "candidate_groups": 232,
+          "active_groups": 8,
+          "maximum_probability": 0.23814228177070618,
+          "posterior_entropy": 1.628150463104248,
+          "evidence_min": 0.26698392629623413,
+          "evidence_max": 0.48836007714271545
+        },
+        "level_2": {
+          "candidate_groups": 230,
+          "active_groups": 12,
+          "maximum_probability": 0.41312268376350403,
+          "posterior_entropy": 1.6118788719177246,
+          "evidence_min": 0.267948716878891,
+          "evidence_max": 0.5147643089294434
+        },
+        "level_3": {
+          "candidate_groups": 194,
+          "active_groups": 14,
+          "maximum_probability": 0.23530244827270508,
+          "posterior_entropy": 2.1198835372924805,
+          "evidence_min": 0.2577494978904724,
+          "evidence_max": 0.47124117612838745
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 5,
+        "certified_groups": 1,
+        "rejected_small_seed_groups": 4,
+        "completed_points": 1374,
+        "completed_fraction": 0.0018923430470749736,
+        "mean_completion_delta": 0.02534043788909912,
+        "maximum_completion_delta": 0.05982998013496399,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 1,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.06944222748279572,
+        "mean_profile_candidate_gate": 0.8924424052238464
+      }
+    },
+    "plate": {
+      "semantic_covered_points": 625370,
+      "semantic_fallback_points": 100714,
+      "semantic_mean_valid_slots": 3.9951083660125732,
+      "spatial_covered_points": 652391,
+      "mean_selected_group_support": 0.03378662094473839,
+      "mean_selected_group_probability": 0.00890707690268755,
+      "penalized_points": 560249,
+      "mean_penalty": 0.02268177829682827,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 7285,
+      "outside_points": 498013,
+      "anchor_score": 0.4528418481349945,
+      "raw_anchor_score": 0.4528418481349945,
+      "semantic_preservation_score": 0.4939454197883606,
+      "outside_score": 0.4528418481349945,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.515845000743866,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 247,
+          "active_groups": 17,
+          "maximum_probability": 0.24614226818084717,
+          "posterior_entropy": 2.212298631668091,
+          "evidence_min": 0.30388855934143066,
+          "evidence_max": 0.5554420948028564
+        },
+        "level_1": {
+          "candidate_groups": 232,
+          "active_groups": 28,
+          "maximum_probability": 0.1770302951335907,
+          "posterior_entropy": 2.857102394104004,
+          "evidence_min": 0.33199605345726013,
+          "evidence_max": 0.5334165692329407
+        },
+        "level_2": {
+          "candidate_groups": 230,
+          "active_groups": 14,
+          "maximum_probability": 0.25638437271118164,
+          "posterior_entropy": 2.0876598358154297,
+          "evidence_min": 0.3141278922557831,
+          "evidence_max": 0.558905839920044
+        },
+        "level_3": {
+          "candidate_groups": 194,
+          "active_groups": 17,
+          "maximum_probability": 0.3423653841018677,
+          "posterior_entropy": 1.9264236688613892,
+          "evidence_min": 0.3014713525772095,
+          "evidence_max": 0.563545823097229
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 4,
+        "certified_groups": 4,
+        "rejected_small_seed_groups": 0,
+        "completed_points": 3722,
+        "completed_fraction": 0.005126128904521465,
+        "mean_completion_delta": 0.05173342302441597,
+        "maximum_completion_delta": 0.09600883722305298,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 4,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.04151281341910362,
+        "mean_profile_candidate_gate": 0.9444326907396317
+      }
+    },
+    "sake cup": {
+      "semantic_covered_points": 625370,
+      "semantic_fallback_points": 100714,
+      "semantic_mean_valid_slots": 3.9951083660125732,
+      "spatial_covered_points": 663083,
+      "mean_selected_group_support": 0.023830648511648178,
+      "mean_selected_group_probability": 0.007135430816560984,
+      "penalized_points": 573012,
+      "mean_penalty": 0.03311586380004883,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 7457,
+      "outside_points": 553730,
+      "anchor_score": 0.4415113925933838,
+      "raw_anchor_score": 0.48129257559776306,
+      "semantic_preservation_score": 0.4415113925933838,
+      "outside_score": 0.4415113925933838,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.7406976222991943,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 247,
+          "active_groups": 11,
+          "maximum_probability": 0.2562668025493622,
+          "posterior_entropy": 1.9426015615463257,
+          "evidence_min": 0.2608709931373596,
+          "evidence_max": 0.5577414631843567
+        },
+        "level_1": {
+          "candidate_groups": 232,
+          "active_groups": 10,
+          "maximum_probability": 0.4082289934158325,
+          "posterior_entropy": 1.438746452331543,
+          "evidence_min": 0.2571905553340912,
+          "evidence_max": 0.5383560061454773
+        },
+        "level_2": {
+          "candidate_groups": 230,
+          "active_groups": 13,
+          "maximum_probability": 0.29032495617866516,
+          "posterior_entropy": 1.8653504848480225,
+          "evidence_min": 0.27124151587486267,
+          "evidence_max": 0.557761013507843
+        },
+        "level_3": {
+          "candidate_groups": 194,
+          "active_groups": 12,
+          "maximum_probability": 0.2568025588989258,
+          "posterior_entropy": 1.8306653499603271,
+          "evidence_min": 0.2732453942298889,
+          "evidence_max": 0.5515735149383545
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 6,
+        "certified_groups": 4,
+        "rejected_small_seed_groups": 2,
+        "completed_points": 2992,
+        "completed_fraction": 0.004120735451579094,
+        "mean_completion_delta": 0.02308112382888794,
+        "maximum_completion_delta": 0.09535020589828491,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 4,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.03815441858023405,
+        "mean_profile_candidate_gate": 0.8791248351335526
+      }
+    },
+    "spoon": {
+      "semantic_covered_points": 625370,
+      "semantic_fallback_points": 100714,
+      "semantic_mean_valid_slots": 3.9951083660125732,
+      "spatial_covered_points": 663520,
+      "mean_selected_group_support": 0.015430094674229622,
+      "mean_selected_group_probability": 0.0035526889842003584,
+      "penalized_points": 577528,
+      "mean_penalty": 0.026063913479447365,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 945,
+      "outside_points": 553860,
+      "anchor_score": 0.5224361419677734,
+      "raw_anchor_score": 0.5224361419677734,
+      "semantic_preservation_score": 0.54307621717453,
+      "outside_score": 0.5224361419677734,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.5857075452804565,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 247,
+          "active_groups": 17,
+          "maximum_probability": 0.19656910002231598,
+          "posterior_entropy": 2.246744155883789,
+          "evidence_min": 0.4013693034648895,
+          "evidence_max": 0.5901931524276733
+        },
+        "level_1": {
+          "candidate_groups": 232,
+          "active_groups": 16,
+          "maximum_probability": 0.2504406273365021,
+          "posterior_entropy": 2.2571518421173096,
+          "evidence_min": 0.39293572306632996,
+          "evidence_max": 0.5866321921348572
+        },
+        "level_2": {
+          "candidate_groups": 230,
+          "active_groups": 14,
+          "maximum_probability": 0.2207363098859787,
+          "posterior_entropy": 2.092078685760498,
+          "evidence_min": 0.4079646170139313,
+          "evidence_max": 0.5893173813819885
+        },
+        "level_3": {
+          "candidate_groups": 194,
+          "active_groups": 16,
+          "maximum_probability": 0.25154542922973633,
+          "posterior_entropy": 2.0578575134277344,
+          "evidence_min": 0.40469634532928467,
+          "evidence_max": 0.5913589596748352
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 3,
+        "certified_groups": 3,
+        "rejected_small_seed_groups": 0,
+        "completed_points": 474,
+        "completed_fraction": 0.0006528170197270811,
+        "mean_completion_delta": 0.05120859667658806,
+        "maximum_completion_delta": 0.09222817420959473,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 3,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.03837270041306814,
+        "mean_profile_candidate_gate": 0.9350550373395284
+      }
+    },
+    "wavy noodles": {
+      "semantic_covered_points": 625370,
+      "semantic_fallback_points": 100714,
+      "semantic_mean_valid_slots": 3.9951083660125732,
+      "spatial_covered_points": 652685,
+      "mean_selected_group_support": 0.016395803540945053,
+      "mean_selected_group_probability": 0.007286005653440952,
+      "penalized_points": 562372,
+      "mean_penalty": 0.030787069350481033,
+      "geodesic_recovered_points": 0,
+      "geodesic_recovered_fraction": 0.0,
+      "maximum_penalty": 0.08,
+      "anchor_points": 6450,
+      "outside_points": 554086,
+      "anchor_score": 0.3903141915798187,
+      "raw_anchor_score": 0.6587074398994446,
+      "semantic_preservation_score": 0.3903141915798187,
+      "outside_score": 0.3903141915798187,
+      "null_expert_weight": 0.0,
+      "mean_conformal_gate": 0.6855673789978027,
+      "global_group_posterior": {
+        "level_0": {
+          "candidate_groups": 247,
+          "active_groups": 3,
+          "maximum_probability": 0.42016109824180603,
+          "posterior_entropy": 1.0793675184249878,
+          "evidence_min": 0.23305772244930267,
+          "evidence_max": 0.6572380661964417
+        },
+        "level_1": {
+          "candidate_groups": 232,
+          "active_groups": 3,
+          "maximum_probability": 0.3492280840873718,
+          "posterior_entropy": 1.0970218181610107,
+          "evidence_min": 0.2524186968803406,
+          "evidence_max": 0.6650500297546387
+        },
+        "level_2": {
+          "candidate_groups": 230,
+          "active_groups": 4,
+          "maximum_probability": 0.48999863862991333,
+          "posterior_entropy": 1.0674747228622437,
+          "evidence_min": 0.23047709465026855,
+          "evidence_max": 0.6557153463363647
+        },
+        "level_3": {
+          "candidate_groups": 194,
+          "active_groups": 8,
+          "maximum_probability": 0.3691786825656891,
+          "posterior_entropy": 1.2953004837036133,
+          "evidence_min": 0.24734905362129211,
+          "evidence_max": 0.6740051507949829
+        }
+      },
+      "seeded_group_completion": {
+        "seeded_group_completion": true,
+        "candidate_seed_groups": 6,
+        "certified_groups": 5,
+        "rejected_small_seed_groups": 1,
+        "completed_points": 3878,
+        "completed_fraction": 0.005340979900211096,
+        "mean_completion_delta": 0.010491800494492054,
+        "maximum_completion_delta": 0.049080491065979004,
+        "minimum_seed_score": 0.55,
+        "target_quantile": 0.2,
+        "groups_reaching_hop_limit": 0,
+        "maximum_expansion_ratio": 2.0,
+        "anisotropic_completion": false,
+        "mean_shape_budget_scale": 1.0,
+        "mean_secondary_axis_ratio": 1.0,
+        "mean_anisotropic_edge_retention": 1.0,
+        "seed_conditioned_anisotropy": false,
+        "seed_conditioned_groups": 0,
+        "seed_shape_fallback_groups": 0,
+        "anisotropic_direction_power": 1.0,
+        "token_profile_gate": true,
+        "profile_certified_groups": 5,
+        "profile_rejected_groups": 0,
+        "mean_profile_radius": 0.03491392955183983,
+        "mean_profile_candidate_gate": 0.9181708812713623
+      }
+    }
+  },
+  "group_feature_agreement_floor": -1.0,
+  "group_feature_agreement_power": 1.0,
+  "semantic_storage_bytes": 176494552,
+  "semantic_storage_megabytes": 168.31832122802734,
+  "semantic_keep_mask": null,
+  "semantic_kept_fraction": 1.0,
+  "label_dir": "/home/anlanfan/Dr-Splat/drsplat_data/lerf_ovs/label/ramen",
+  "num_label_frames": 7,
+  "num_categories": 14
+}

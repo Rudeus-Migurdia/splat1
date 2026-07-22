@@ -65,6 +65,26 @@ def validate_independent_hierarchical_memory(manifest, artifact_dir, required_mo
             (point_reliability < 0.0) | (point_reliability > 1.0)
         ).any():
             raise ValueError("Point reliability must lie in [0, 1]")
+    quantization_error_name = manifest.get("point_group_quantization_error")
+    if quantization_error_name:
+        point_quantization_error = np.load(
+            os.path.join(artifact_dir, quantization_error_name), mmap_mode="r"
+        )
+        if point_quantization_error.shape != point_ids.shape:
+            raise ValueError(
+                "Point quantization error must match four resident point-token slots"
+            )
+        if point_quantization_error.dtype != np.uint8:
+            raise ValueError("Point quantization error must use uint8 storage")
+        scale = float(manifest.get("point_group_quantization_error_scale", 0.0))
+        if not np.isfinite(scale) or scale <= 0.0:
+            raise ValueError("Point quantization-error scale must be positive")
+        if manifest.get("point_group_quantization_error_quantizer") != "ceil_upper_bound":
+            raise ValueError(
+                "Point quantization error must use the ceil_upper_bound quantizer"
+            )
+        if float(point_quantization_error.max(initial=0)) * scale > 2.0 + 1e-6:
+            raise ValueError("Point chord quantization error must lie in [0, 2]")
     required_slots = int(manifest.get("resident_slots_required", 0))
     if required_slots:
         if required_slots != point_ids.shape[1]:
@@ -86,6 +106,7 @@ def validate_independent_hierarchical_memory(manifest, artifact_dir, required_mo
         "has_semantic_atom_ids": False,
         "independent_level_codebooks": True,
         "resident_slot_fraction": float(point_valid.mean()),
+        "has_point_quantization_error": bool(quantization_error_name),
     }
 
 

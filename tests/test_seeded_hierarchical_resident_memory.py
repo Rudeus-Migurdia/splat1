@@ -4,9 +4,11 @@ import pytest
 torch = pytest.importorskip("torch")
 
 from build_seeded_hierarchical_resident_memory import (  # noqa: E402
+    CHORD_ERROR_SCALE,
     assign_codebook_in_chunks,
     complete_resident_sources,
     deterministic_weighted_indices,
+    quantize_chord_error_upper_bound,
     select_group_feature_source,
 )
 from build_hierarchical_semantic_memory import (  # noqa: E402
@@ -92,7 +94,28 @@ def test_full_consensus_completes_missing_resident_slots_symmetrically():
     assert sam_mask.tolist() == [True, False, False]
     assert old_mask.tolist() == [False, True, False]
     assert unresolved.tolist() == [False, False, True]
-    assert source_ids.tolist() == [int(AUXILIARY_SOURCE), int(OLD_SOURCE), int(INVALID_SOURCE)]
+    assert source_ids.tolist() == [
+        int(AUXILIARY_SOURCE),
+        int(OLD_SOURCE),
+        int(INVALID_SOURCE),
+    ]
     assert output[0].tolist() == pytest.approx([0.0, 1.0])
     assert output[1].tolist() == pytest.approx([1.0, 0.0])
     assert output_reliability.tolist() == pytest.approx([0.03, 0.045, 0.0])
+
+
+def test_chord_error_quantization_is_a_compact_upper_bound():
+    error = np.array([0.0, 0.001, 0.125, 1.0, 2.0], dtype=np.float32)
+    packed = quantize_chord_error_upper_bound(error)
+    restored = packed.astype(np.float32) * CHORD_ERROR_SCALE
+
+    assert packed.dtype == np.uint8
+    assert np.all(restored + 1e-7 >= error)
+    assert np.all(restored - error <= CHORD_ERROR_SCALE + 1e-7)
+
+
+def test_chord_error_quantization_rejects_invalid_values():
+    with pytest.raises(ValueError):
+        quantize_chord_error_upper_bound(np.array([-0.1], dtype=np.float32))
+    with pytest.raises(ValueError):
+        quantize_chord_error_upper_bound(np.array([np.nan], dtype=np.float32))

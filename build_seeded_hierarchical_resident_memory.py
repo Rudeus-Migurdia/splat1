@@ -30,6 +30,9 @@ from build_hierarchical_semantic_memory import (
 )
 
 
+CHORD_ERROR_SCALE = 2.0 / 255.0
+
+
 def set_deterministic_seed(seed):
     """Seed every stochastic backend used by the builder before CUDA work starts."""
     import torch
@@ -186,6 +189,15 @@ def assign_codebook_in_chunks(index, features, assignable, chunk_size):
     return output
 
 
+def quantize_chord_error_upper_bound(error):
+    """Pack unit-vector chord errors while preserving a conservative bound."""
+    error = np.asarray(error, dtype=np.float32)
+    if not np.isfinite(error).all() or np.any(error < 0.0):
+        raise ValueError("Chord errors must be finite and non-negative")
+    clipped = np.clip(error, 0.0, 2.0)
+    return np.ceil(clipped / CHORD_ERROR_SCALE).clip(0, 255).astype(np.uint8)
+
+
 def train_level_codebook(
     features,
     reliability,
@@ -226,19 +238,33 @@ def train_level_codebook(
     group_code_ids = assign_codebook_in_chunks(
         index, features, assignable, assignment_chunk_size
     )
-    reconstruction = codebook[group_code_ids[assignable]] if assignable.size else np.empty((0, features.shape[1]))
+    stored_codebook = codebook.astype(np.float16)
+    inference_codebook = normalize(stored_codebook.astype(np.float32))
+    reconstruction = (
+        inference_codebook[group_code_ids[assignable]]
+        if assignable.size
+        else np.empty((0, features.shape[1]))
+    )
     assignment_cosine = (
         np.sum(features[assignable] * reconstruction, axis=1)
         if assignable.size
         else np.empty(0, dtype=np.float32)
     )
+    group_quantization_error = np.full(features.shape[0], 2.0, dtype=np.float32)
+    if assignable.size:
+        group_quantization_error[assignable] = np.sqrt(
+            np.clip(2.0 - 2.0 * assignment_cosine, 0.0, 4.0)
+        )
     used = np.bincount(group_code_ids[assignable], minlength=actual_codes) if assignable.size else np.zeros(actual_codes)
-    return codebook.astype(np.float16), group_code_ids, {
+    return stored_codebook, group_code_ids, group_quantization_error, {
         "num_training_groups": int(training.size),
         "num_training_samples": int(sample_ids.size),
         "num_codes": int(actual_codes),
         "occupied_codes": int((used > 0).sum()),
         "assignment_cosine_quantiles": quantiles(assignment_cosine),
+        "assignment_chord_error_quantiles": quantiles(
+            group_quantization_error[assignable]
+        ),
     }
 
 
@@ -383,6 +409,7 @@ def main():
     point_ids_by_level = []
     point_reliability_by_level = []
     point_source_by_level = []
+    point_quantization_error_by_level = []
     level_codebooks = []
     level_training = []
     raw_source_summary = []
@@ -438,7 +465,7 @@ def main():
                 args.fallback_reliability,
             )
         )
-        codebook, group_codes, training = train_level_codebook(
+        codebook, group_codes, group_quantization_error, training = train_level_codebook(
             features,
             reliability,
             group_sizes,
@@ -457,6 +484,7 @@ def main():
         point_ids_by_level.append(group_codes[labels])
         point_reliability_by_level.append(reliability[labels])
         point_source_by_level.append(source[labels])
+        point_quantization_error_by_level.append(group_quantization_error[labels])
         training.update(
             {
                 "name": name,
@@ -470,6 +498,9 @@ def main():
                 "full_consensus_fallback_sam_fraction": float(fallback_sam.mean()),
                 "unresolved_group_fraction": float(unresolved.mean()),
                 "resident_reliability_quantiles": quantiles(reliability[labels]),
+                "resident_quantization_error_quantiles": quantiles(
+                    group_quantization_error[labels]
+                ),
                 "resident_usable_fraction": float((reliability[labels] > 0.0).mean()),
             }
         )
@@ -496,6 +527,9 @@ def main():
     ).astype(point_dtype)
     point_reliability = np.stack(point_reliability_by_level, axis=1).astype(np.float16)
     point_sources = np.stack(point_source_by_level, axis=1).astype(np.uint8)
+    point_quantization_error = quantize_chord_error_upper_bound(
+        np.stack(point_quantization_error_by_level, axis=1)
+    )
     point_weights = np.full(global_point_ids.shape, 255, dtype=np.uint8)
     semantic_ids = np.concatenate(
         [np.arange(codebook.shape[0], dtype=np.int64)[:, None] for codebook in level_codebooks], axis=0
@@ -535,6 +569,10 @@ def main():
     np.save(os.path.join(output_dir, "point_group_weights.npy"), point_weights)
     np.save(os.path.join(output_dir, "point_group_reliability.npy"), point_reliability)
     np.save(os.path.join(output_dir, "point_group_source.npy"), point_sources)
+    np.save(
+        os.path.join(output_dir, "point_group_quantization_error.npy"),
+        point_quantization_error,
+    )
 
     semantic_bytes = int(
         sum(codebook.nbytes for codebook in level_codebooks)
@@ -547,10 +585,11 @@ def main():
         + point_weights.nbytes
         + point_reliability.nbytes
         + point_sources.nbytes
+        + point_quantization_error.nbytes
     )
     usable = point_reliability > 0.0
     manifest = {
-        "format_version": 2,
+        "format_version": 3,
         "representation": "hierarchical_independent_group_codebooks",
         "method": "seeded_four_slot_sam_hierarchical_resident_memory",
         "num_gaussians": num_gaussians,
@@ -569,6 +608,10 @@ def main():
         "point_group_weights": "point_group_weights.npy",
         "point_group_reliability": "point_group_reliability.npy",
         "point_group_source": "point_group_source.npy",
+        "point_group_quantization_error": "point_group_quantization_error.npy",
+        "point_group_quantization_error_dtype": "uint8",
+        "point_group_quantization_error_scale": CHORD_ERROR_SCALE,
+        "point_group_quantization_error_quantizer": "ceil_upper_bound",
         "invalid_id": point_invalid,
         "id_dtype": str(global_point_ids.dtype),
         "weight_dtype": "uint8_full_resident_membership",
@@ -592,12 +635,13 @@ def main():
         },
         "codebook": {
             "layout": "four independent seeded spherical K-means codebooks; every Gaussian stores one resident ID per level",
-            "query_readout": "reader-defined peer-token query fusion; resident slots encode no parent preference or fixed level priority",
+            "query_readout": "reader-defined peer-token query fusion with optional per-slot quantization intervals; resident slots encode no parent preference or fixed level priority",
         },
         "storage": {
             "total_semantic_bytes": semantic_bytes,
             "bytes_per_gaussian_amortized": float(semantic_bytes / num_gaussians),
             "shared_vocabulary_bytes_unique": int(sum(codebook.nbytes for codebook in level_codebooks)),
+            "quantization_error_bytes": int(point_quantization_error.nbytes),
         },
         "source": {
             "geometry_checkpoint": os.path.abspath(args.geometry_checkpoint),

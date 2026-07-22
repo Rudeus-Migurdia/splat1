@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """Evaluate a fully discrete per-Gaussian multi-level semantic codebook."""
 
+import hashlib
 import json
 import os
 import sys
@@ -30,10 +31,22 @@ from semantic_hypothesis_routing import (
     blend_group_hypotheses,
     blend_dual_code_hypotheses,
     blend_sparse_hypothesis,
+    complete_scores_from_seeded_groups,
+    fuse_calibrated_equal_query_tokens,
     fuse_calibrated_hierarchical_memory,
     fuse_equal_query_tokens,
     fuse_hierarchical_semantic_memory,
+    fuse_information_gain_equal_query_tokens,
+    fuse_global_sparse_group_retrieval,
+    fuse_multiscale_set_relation_token_scores,
+    fuse_quantization_aware_equal_query_tokens,
+    fuse_query_conditioned_spatial_posterior,
+    fuse_signed_relation_graph_scores,
     route_group_hypotheses,
+)
+from query_conditioned_spatial_posterior import (
+    GroupAnisotropicGeometry,
+    QueryConditionedSpatialPosterior,
 )
 from semantic_field_utils import load_geometry_checkpoint
 from utils.general_utils import safe_state
@@ -610,6 +623,155 @@ class SparseSemanticHypothesis:
         return output
 
 
+class SignedGaussianRelationGraph:
+    """Read-only compact local graph used only after query-token scoring."""
+
+    def __init__(self, artifact_dir, device="cuda"):
+        self.dir = os.path.abspath(artifact_dir)
+        with open(os.path.join(self.dir, "manifest.json")) as source:
+            self.manifest = json.load(source)
+        if self.manifest.get("representation") != (
+            "multiview_local_signed_gaussian_relation_graph"
+        ):
+            raise ValueError("Unsupported Gaussian relation graph representation")
+        self.num_gaussians = int(self.manifest["num_gaussians"])
+        neighbor_ids = np.load(
+            os.path.join(self.dir, self.manifest["neighbor_ids"])
+        )
+        packed_weights = np.load(
+            os.path.join(self.dir, self.manifest["signed_relation_weights"])
+        )
+        if neighbor_ids.shape != packed_weights.shape:
+            raise ValueError("Relation graph IDs and weights must match")
+        if neighbor_ids.shape != (
+            self.num_gaussians,
+            int(self.manifest["neighbors"]),
+        ):
+            raise ValueError("Relation graph shape does not match its manifest")
+        if neighbor_ids.dtype != np.int32 or packed_weights.dtype != np.int8:
+            raise ValueError("Relation graph requires int32 IDs and int8 weights")
+        if neighbor_ids.size and (
+            int(neighbor_ids.min()) < 0
+            or int(neighbor_ids.max()) >= self.num_gaussians
+        ):
+            raise ValueError("Relation graph neighbor IDs exceed the Gaussian count")
+        scale = float(self.manifest["relation_scale"])
+        if scale <= 0.0:
+            raise ValueError("Relation graph scale must be positive")
+        self.neighbor_ids = torch.from_numpy(neighbor_ids).to(device)
+        self.signed_weights = (
+            torch.from_numpy(packed_weights.astype(np.float32)) * scale
+        ).to(device)
+
+    @property
+    def storage_bytes(self):
+        return int(self.manifest["storage"]["total_bytes"])
+
+
+class MultiscaleSetRelationGraph:
+    """Sparse level-conditioned relations selected by odd/even training views."""
+
+    def __init__(self, artifact_dir, device="cuda"):
+        self.dir = os.path.abspath(artifact_dir)
+        with open(os.path.join(self.dir, "manifest.json")) as source:
+            self.manifest = json.load(source)
+        if self.manifest.get("representation") != (
+            "heldout_multiscale_set_relation_diagnostic"
+        ):
+            raise ValueError("Unsupported multiscale set relation representation")
+        if not self.manifest.get("source_contract", {}).get(
+            "odd_even_heldout_evaluation"
+        ):
+            raise ValueError("Multiscale relations require odd/even validation")
+        self.num_gaussians = int(self.manifest["num_gaussians"])
+        relation_graph_dir = self.manifest["inputs"]["relation_graph_dir"]
+        with open(os.path.join(relation_graph_dir, "manifest.json")) as source:
+            relation_manifest = json.load(source)
+        neighbor_ids = np.load(
+            os.path.join(relation_graph_dir, relation_manifest["neighbor_ids"])
+        )
+        signatures = np.load(
+            os.path.join(
+                self.dir, self.manifest["artifacts"]["multiscale_relation_signature"]
+            )
+        )
+        ambiguous = np.load(
+            os.path.join(
+                self.dir, self.manifest["artifacts"]["stable_set_ambiguous_edges"]
+            )
+        )
+        expected_edges = (
+            self.num_gaussians,
+            int(self.manifest["neighbors"]),
+        )
+        if neighbor_ids.shape != expected_edges or neighbor_ids.dtype != np.int32:
+            raise ValueError("Multiscale relation neighbor IDs violate the manifest")
+        if signatures.shape != expected_edges + (4,) or signatures.dtype != np.int8:
+            raise ValueError("Multiscale relation signatures must be int8 [N, K, 4]")
+        if ambiguous.shape != expected_edges or ambiguous.dtype != np.bool_:
+            raise ValueError("Stable ambiguity mask must be bool [N, K]")
+        if signatures.size and (signatures.min() < -1 or signatures.max() > 1):
+            raise ValueError("Multiscale relation signatures must be ternary")
+        signatures = signatures * ambiguous[..., None]
+        self.neighbor_ids = torch.from_numpy(neighbor_ids).to(device)
+        self.signed_weights = torch.from_numpy(signatures.astype(np.float32)).to(device)
+        self._storage_bytes = int(
+            neighbor_ids.nbytes + signatures.nbytes + ambiguous.nbytes
+        )
+
+    @property
+    def storage_bytes(self):
+        return self._storage_bytes
+
+
+class CounterfactualCodebookNeighborhoods:
+    """Nearest same-level semantic prototypes used as query counterfactuals."""
+
+    def __init__(self, artifact_dir, device="cuda"):
+        self.dir = os.path.abspath(artifact_dir)
+        with open(os.path.join(self.dir, "manifest.json")) as source:
+            self.manifest = json.load(source)
+        if self.manifest.get("representation") != (
+            "hierarchical_codebook_counterfactual_neighborhoods"
+        ):
+            raise ValueError("Unsupported counterfactual codebook neighborhood artifact")
+        self.neighbor_ids = {}
+        for level_spec in self.manifest.get("levels", []):
+            level = int(level_spec["level"])
+            ids = np.load(os.path.join(self.dir, level_spec["neighbor_ids"]))
+            expected = (int(level_spec["num_codes"]), int(self.manifest["neighbors"]))
+            if ids.shape != expected or ids.dtype != np.uint16:
+                raise ValueError("Counterfactual neighbor IDs violate their manifest")
+            if ids.size and int(ids.max()) >= expected[0]:
+                raise ValueError("Counterfactual neighbor IDs exceed their level codebook")
+            self.neighbor_ids[level] = torch.from_numpy(ids.astype(np.int64)).to(device)
+        if sorted(self.neighbor_ids) != [0, 1, 2, 3]:
+            raise ValueError("Counterfactual neighborhoods require exactly levels 0-3")
+
+    def validate_memory(self, memory_dir):
+        manifest_path = os.path.join(os.path.abspath(memory_dir), "manifest.json")
+        with open(manifest_path, "rb") as source:
+            digest = hashlib.sha256(source.read()).hexdigest()
+        if digest != self.manifest.get("memory_manifest_sha256"):
+            raise ValueError("Counterfactual neighborhoods do not match the resident memory")
+        with open(manifest_path) as source:
+            memory = json.load(source)
+        declared = {int(item["level"]): item for item in memory["level_codebooks"]}
+        for level_spec in self.manifest["levels"]:
+            level = int(level_spec["level"])
+            codebook_path = os.path.join(memory_dir, declared[level]["codebook"])
+            with open(codebook_path, "rb") as source:
+                codebook_digest = hashlib.sha256(source.read()).hexdigest()
+            if codebook_digest != level_spec["codebook_sha256"]:
+                raise ValueError(
+                    f"Counterfactual neighborhoods do not match level {level} codebook"
+                )
+
+    @property
+    def storage_bytes(self):
+        return int(self.manifest["storage"]["total_bytes"])
+
+
 class GroupHierarchy:
     def __init__(
         self,
@@ -619,9 +781,13 @@ class GroupHierarchy:
         device="cuda",
     ):
         self.artifact_dir = os.path.abspath(artifact_dir) if artifact_dir else None
+        self.manifest = None
+        group_local_semantic_ids = None
+        level_code_priors = None
         if self.artifact_dir:
             with open(os.path.join(self.artifact_dir, "manifest.json")) as source:
                 manifest = json.load(source)
+            self.manifest = manifest
             representation = manifest.get("representation")
             if representation not in {
                 "compact_group_hierarchy",
@@ -633,6 +799,7 @@ class GroupHierarchy:
             independent_level_codebooks = (
                 representation == "hierarchical_independent_group_codebooks"
             )
+            level_codebooks = {} if independent_level_codebooks else None
             shared_group_codes = representation == "shared_codebook_group_hierarchy"
             group_levels = None
             if independent_level_codebooks:
@@ -648,6 +815,7 @@ class GroupHierarchy:
                 if group_levels.shape != (semantic_ids.shape[0],):
                     raise ValueError("Independent hierarchical group levels must match semantic tokens")
                 semantic_invalid = int(manifest["semantic_invalid_id"])
+                group_local_semantic_ids = semantic_ids[:, 0].copy()
                 codebook = np.zeros(
                     (semantic_ids.shape[0], int(manifest["feature_dim"])),
                     dtype=np.float32,
@@ -661,6 +829,10 @@ class GroupHierarchy:
                     level_codebook = np.load(
                         os.path.join(self.artifact_dir, level_spec["codebook"])
                     ).astype(np.float32)
+                    level_codebook /= np.maximum(
+                        np.linalg.norm(level_codebook, axis=-1, keepdims=True), 1e-8
+                    )
+                    level_codebooks[level] = level_codebook
                     local_ids = semantic_ids[level_mask, 0]
                     if np.any(local_ids == semantic_invalid):
                         raise ValueError("Resident hierarchical tokens must have a local semantic ID")
@@ -741,25 +913,89 @@ class GroupHierarchy:
                 else torch.zeros_like(torch.from_numpy(point_scores)).to(device)
             )
             point_reliability_name = manifest.get("point_group_reliability")
-            self.point_reliability = (
-                torch.from_numpy(
-                    np.load(
-                        os.path.join(self.artifact_dir, point_reliability_name)
-                    ).astype(np.float32)
-                ).to(device)
+            point_reliability_values = (
+                np.load(
+                    os.path.join(self.artifact_dir, point_reliability_name)
+                ).astype(np.float32)
                 if point_reliability_name
-                else torch.ones_like(torch.from_numpy(point_scores)).to(device)
+                else np.ones_like(point_scores, dtype=np.float32)
             )
+            self.point_reliability = torch.from_numpy(
+                point_reliability_values
+            ).to(device)
             if self.point_reliability.shape != self.point_entropy.shape:
                 raise ValueError("Point reliability must match group ID slots")
-            reliability_name = manifest.get("group_reliability")
-            self.group_reliability = (
-                torch.from_numpy(
-                    np.load(os.path.join(self.artifact_dir, reliability_name)).astype(np.float32)
-                ).to(device)
-                if reliability_name
-                else torch.ones(codebook.shape[0], dtype=torch.float32, device=device)
+            quantization_error_name = manifest.get(
+                "point_group_quantization_error"
             )
+            if quantization_error_name:
+                quantization_error_scale = float(
+                    manifest["point_group_quantization_error_scale"]
+                )
+                if quantization_error_scale <= 0.0:
+                    raise ValueError("Point quantization-error scale must be positive")
+                packed_quantization_error = np.load(
+                    os.path.join(self.artifact_dir, quantization_error_name)
+                )
+                if packed_quantization_error.dtype != np.uint8:
+                    raise ValueError("Point quantization error must use uint8 storage")
+                self.point_quantization_error = torch.from_numpy(
+                    packed_quantization_error.astype(np.float32)
+                    * quantization_error_scale
+                ).to(device)
+                if self.point_quantization_error.shape != self.point_entropy.shape:
+                    raise ValueError(
+                        "Point quantization error must match group ID slots"
+                    )
+                point_levels = group_levels[np.maximum(point_ids, 0)]
+                usable = (point_ids >= 0) & (point_reliability_values > 0.0)
+                quantization_percentile = np.zeros(
+                    packed_quantization_error.shape, dtype=np.float32
+                )
+                for level in np.unique(point_levels[usable]):
+                    level_mask = usable & (point_levels == level)
+                    counts = np.bincount(
+                        packed_quantization_error[level_mask], minlength=256
+                    ).astype(np.float64)
+                    midpoint = (np.cumsum(counts) - 0.5 * counts) / max(
+                        counts.sum(), 1.0
+                    )
+                    quantization_percentile[level_mask] = midpoint[
+                        packed_quantization_error[level_mask]
+                    ]
+                self.point_quantization_error_percentile = torch.from_numpy(
+                    quantization_percentile
+                ).to(device)
+            else:
+                self.point_quantization_error = None
+                self.point_quantization_error_percentile = None
+            reliability_name = manifest.get("group_reliability")
+            group_reliability_values = (
+                np.load(os.path.join(self.artifact_dir, reliability_name)).astype(np.float32)
+                if reliability_name
+                else np.ones(codebook.shape[0], dtype=np.float32)
+            )
+            self.group_reliability = torch.from_numpy(group_reliability_values).to(device)
+            if independent_level_codebooks:
+                safe_point_ids = np.maximum(point_ids, 0)
+                point_levels = group_levels[safe_point_ids]
+                point_local_ids = group_local_semantic_ids[safe_point_ids]
+                occupancy_weight = (
+                    point_scores
+                    * point_reliability_values
+                    * group_reliability_values[safe_point_ids]
+                )
+                occupancy_weight = np.where(point_ids >= 0, occupancy_weight, 0.0)
+                level_code_priors = {}
+                for level, level_codebook in level_codebooks.items():
+                    level_mask = (point_ids >= 0) & (point_levels == level)
+                    counts = np.bincount(
+                        point_local_ids[level_mask],
+                        weights=occupancy_weight[level_mask],
+                        minlength=level_codebook.shape[0],
+                    ).astype(np.float64)
+                    counts += 0.5
+                    level_code_priors[level] = (counts / counts.sum()).astype(np.float32)
         else:
             self.codebook_path = os.path.abspath(codebook_path)
             self.assignments_path = os.path.abspath(assignments_path)
@@ -774,12 +1010,17 @@ class GroupHierarchy:
             self.point_reliability = torch.ones_like(
                 torch.from_numpy(point_scores)
             ).to(device)
+            self.point_quantization_error = None
+            self.point_quantization_error_percentile = None
             self.group_reliability = torch.ones(
                 codebook.shape[0], dtype=torch.float32, device=device
             )
             competitor_ids = np.full_like(point_ids, -1)
             atom_codebook = np.zeros_like(codebook)
             group_levels = None
+            level_codebooks = None
+            group_local_semantic_ids = None
+            level_code_priors = None
         codebook /= np.maximum(np.linalg.norm(codebook, axis=-1, keepdims=True), 1e-8)
         self.codebook = torch.from_numpy(codebook).to(device)
         atom_codebook /= np.maximum(
@@ -792,6 +1033,27 @@ class GroupHierarchy:
         if group_levels is None:
             group_levels = np.zeros(codebook.shape[0], dtype=np.int64)
         self.group_levels = torch.from_numpy(group_levels).to(device)
+        self.group_local_semantic_ids = (
+            torch.from_numpy(group_local_semantic_ids).to(device)
+            if group_local_semantic_ids is not None
+            else None
+        )
+        self.level_codebooks = (
+            {
+                level: torch.from_numpy(level_codebook).to(device)
+                for level, level_codebook in level_codebooks.items()
+            }
+            if level_codebooks is not None
+            else None
+        )
+        self.level_code_priors = (
+            {
+                level: torch.from_numpy(prior).to(device)
+                for level, prior in level_code_priors.items()
+            }
+            if level_code_priors is not None
+            else None
+        )
         if self.point_ids.shape != self.point_scores.shape:
             raise ValueError("Group IDs and scores must have matching shapes")
         valid = self.point_ids >= 0
@@ -938,6 +1200,147 @@ class GroupHierarchy:
         return torch.where(valid, levels, torch.full_like(levels, -1))
 
     @torch.no_grad()
+    def candidate_quantization_error(self, topk):
+        if self.point_quantization_error is None:
+            raise ValueError(
+                "Quantization-aware routing requires a rebuilt memory with "
+                "point_group_quantization_error"
+            )
+        return (
+            self.point_quantization_error[:, :topk]
+            if topk > 0
+            else self.point_quantization_error
+        )
+
+    @torch.no_grad()
+    def candidate_quantization_error_percentile(self, topk):
+        if self.point_quantization_error_percentile is None:
+            raise ValueError(
+                "Level-normalized routing requires point quantization-error metadata"
+            )
+        return (
+            self.point_quantization_error_percentile[:, :topk]
+            if topk > 0
+            else self.point_quantization_error_percentile
+        )
+
+    @torch.no_grad()
+    def candidate_level_calibration(
+        self,
+        clip_model,
+        category_index,
+        candidate_scores,
+        candidate_levels,
+        valid,
+    ):
+        """Calibrate token scores against each level's complete vocabulary."""
+        if self.level_codebooks is None:
+            raise ValueError("Level calibration requires independent level codebooks")
+        if not (
+            candidate_scores.shape == candidate_levels.shape == valid.shape
+        ):
+            raise ValueError("Candidate calibration tensors must match")
+
+        percentiles = torch.zeros_like(candidate_scores)
+        tail_evidence = torch.zeros_like(candidate_scores)
+        level_stats = {}
+        for level in sorted(self.level_codebooks):
+            level_mask = valid & (candidate_levels == level)
+            reference = clip_model.get_activation(
+                self.level_codebooks[level], category_index
+            ).squeeze(-1).float()
+            sorted_reference = reference.sort().values
+            count = int(sorted_reference.numel())
+            if level_mask.any():
+                ranks = torch.searchsorted(
+                    sorted_reference,
+                    candidate_scores[level_mask].contiguous(),
+                    right=True,
+                ).to(candidate_scores.dtype)
+                cdf = ranks / float(count + 1)
+                tail_probability = (float(count) - ranks + 1.0) / float(count + 1)
+                percentiles[level_mask] = cdf
+                tail_evidence[level_mask] = -tail_probability.clamp_min(1e-12).log()
+            level_stats[f"level_{level}"] = {
+                "vocabulary_size": count,
+                "reference_mean": float(reference.mean().item()),
+                "reference_std": float(reference.std(unbiased=False).item()),
+            }
+        return percentiles, tail_evidence, level_stats
+
+    @torch.no_grad()
+    def candidate_information_gain(
+        self,
+        clip_model,
+        category_index,
+        candidate_scores,
+        candidate_levels,
+        valid,
+        temperature,
+        counterfactual_neighborhoods=None,
+        topk=0,
+    ):
+        """Compute global and local query evidence for four peer codebooks."""
+        if self.level_codebooks is None or self.level_code_priors is None:
+            raise ValueError("Information gain requires independent level codebooks")
+        if self.group_local_semantic_ids is None:
+            raise ValueError("Information gain requires local per-level semantic IDs")
+        if not (
+            candidate_scores.shape == candidate_levels.shape == valid.shape
+        ):
+            raise ValueError("Information-gain candidate tensors must match")
+        if temperature <= 0.0:
+            raise ValueError("Information-gain temperature must be positive")
+
+        point_ids = self.point_ids[:, :topk] if topk > 0 else self.point_ids
+        local_ids = self.group_local_semantic_ids[point_ids.clamp_min(0)]
+        global_gain = torch.zeros_like(candidate_scores)
+        local_gain = (
+            torch.zeros_like(candidate_scores)
+            if counterfactual_neighborhoods is not None
+            else None
+        )
+        level_stats = {}
+        for level in sorted(self.level_codebooks):
+            level_mask = valid & (candidate_levels == level)
+            reference = clip_model.get_activation(
+                self.level_codebooks[level], category_index
+            ).squeeze(-1).float()
+            prior = self.level_code_priors[level].float().clamp_min(1e-12)
+            log_prior = prior.log()
+            log_partition = torch.logsumexp(
+                log_prior + reference / temperature,
+                dim=0,
+            )
+            if level_mask.any():
+                selected_ids = local_ids[level_mask]
+                if int(selected_ids.min()) < 0 or int(selected_ids.max()) >= reference.numel():
+                    raise ValueError("Candidate local IDs exceed their level codebook")
+                global_gain[level_mask] = (
+                    candidate_scores[level_mask] / temperature - log_partition
+                )
+                if counterfactual_neighborhoods is not None:
+                    neighbors = counterfactual_neighborhoods.neighbor_ids[level][
+                        selected_ids
+                    ]
+                    local_log_evidence = torch.logsumexp(
+                        reference[neighbors] / temperature,
+                        dim=1,
+                    ) - np.log(float(neighbors.shape[1]))
+                    local_gain[level_mask] = (
+                        candidate_scores[level_mask] / temperature
+                        - local_log_evidence
+                    )
+            level_stats[f"level_{level}"] = {
+                "vocabulary_size": int(reference.numel()),
+                "log_partition": float(log_partition.item()),
+                "prior_entropy": float((-(prior * log_prior).sum()).item()),
+                "reference_mean": float(reference.mean().item()),
+                "reference_std": float(reference.std(unbiased=False).item()),
+            }
+        return global_gain, local_gain, level_stats
+
+    @torch.no_grad()
     def point_activation(
         self,
         clip_model,
@@ -1022,6 +1425,12 @@ def main():
         default=None,
         help="Compact shared group codebook with uint16 IDs and uint8 weights.",
     )
+    parser.add_argument(
+        "--spatial_group_posterior_dir",
+        default=None,
+        help="Top-2 Group support applied after four-token semantic retrieval.",
+    )
+    parser.add_argument("--group_anisotropic_geometry_dir", default=None)
     parser.add_argument("--group_topk", type=int, default=0)
     parser.add_argument("--group_aggregation", choices=["weighted", "max"], default="weighted")
     parser.add_argument("--group_score_power", type=float, default=1.0)
@@ -1038,6 +1447,27 @@ def main():
             "calibrated_hierarchical_memory",
             "equal_query_softmax",
             "equal_query_max",
+            "equal_query_margin_top2",
+            "equal_query_percentile_max",
+            "equal_query_tail_max",
+            "equal_query_information_gain",
+            "equal_query_counterfactual_information_gain",
+            "equal_query_quantization_lcb",
+            "equal_query_quantization_percentile_lcb",
+            "equal_query_relation_graph",
+            "equal_query_multiscale_set_relation",
+            "equal_query_spatial_posterior",
+            "equal_query_spatial_geodesic",
+            "equal_query_global_sparsemax",
+            "equal_query_global_entmax15",
+            "equal_query_global_entmax15_geodesic",
+            "equal_query_global_anchor_entmax15",
+            "equal_query_global_anchor_null_entmax15",
+            "equal_query_global_anchor_null_entmax15_geodesic",
+            "equal_query_seeded_group_completion",
+            "equal_query_anisotropic_group_completion",
+            "equal_query_seed_anisotropic_group_completion",
+            "equal_query_profile_group_completion",
         ],
         default="residual",
         help="Keep group semantics separate at query time or use the legacy residual.",
@@ -1047,6 +1477,82 @@ def main():
         type=float,
         default=0.10,
         help="Temperature for query-aware fusion across resident hierarchy levels.",
+    )
+    parser.add_argument("--spatial_posterior_maximum_penalty", type=float, default=0.06)
+    parser.add_argument("--spatial_posterior_ring_weight", type=float, default=1.0)
+    parser.add_argument("--spatial_posterior_contrast_temperature", type=float, default=0.05)
+    parser.add_argument("--spatial_posterior_core_membership", type=float, default=0.30)
+    parser.add_argument("--spatial_posterior_entropy_relaxation", type=float, default=0.75)
+    parser.add_argument("--spatial_posterior_geodesic_delta", type=float, default=0.05)
+    parser.add_argument("--spatial_posterior_recovery_factor", type=float, default=0.20)
+    parser.add_argument("--global_group_temperature", type=float, default=0.05)
+    parser.add_argument("--global_group_semantic_weight", type=float, default=0.75)
+    parser.add_argument("--global_group_ring_contrast_strength", type=float, default=0.50)
+    parser.add_argument("--global_group_maximum_penalty", type=float, default=0.08)
+    parser.add_argument("--global_group_entropy_relaxation", type=float, default=0.50)
+    parser.add_argument("--global_group_anchor_quantile", type=float, default=0.20)
+    parser.add_argument("--global_group_outside_quantile", type=float, default=0.75)
+    parser.add_argument("--global_group_anchor_temperature", type=float, default=0.02)
+    parser.add_argument(
+        "--global_group_semantic_preservation_quantile",
+        type=float,
+        default=-1.0,
+    )
+    parser.add_argument("--group_completion_seed_quantile", type=float, default=0.75)
+    parser.add_argument("--group_completion_seed_support", type=float, default=0.95)
+    parser.add_argument("--group_completion_seed_score_floor", type=float, default=0.55)
+    parser.add_argument("--group_completion_target_quantile", type=float, default=0.20)
+    parser.add_argument("--group_completion_boundary_membership", type=float, default=0.05)
+    parser.add_argument("--group_completion_semantic_delta", type=float, default=0.10)
+    parser.add_argument("--group_completion_agreement_temperature", type=float, default=0.02)
+    parser.add_argument("--group_completion_strength", type=float, default=0.75)
+    parser.add_argument("--group_completion_max_expansion_ratio", type=float, default=2.0)
+    parser.add_argument("--group_completion_minimum_seed_points", type=int, default=16)
+    parser.add_argument("--group_completion_minimum_contact", type=float, default=0.05)
+    parser.add_argument("--group_completion_maximum_hops", type=int, default=32)
+    parser.add_argument("--group_completion_anisotropic_axis_floor", type=float, default=0.15)
+    parser.add_argument("--group_completion_anisotropic_budget_floor", type=float, default=0.25)
+    parser.add_argument("--group_completion_anisotropic_semantic_floor", type=float, default=0.50)
+    parser.add_argument("--group_completion_anisotropic_direction_power", type=float, default=1.0)
+    parser.add_argument("--group_completion_profile_quantile", type=float, default=0.90)
+    parser.add_argument("--group_completion_profile_margin", type=float, default=0.03)
+    parser.add_argument("--group_completion_profile_temperature", type=float, default=0.01)
+    parser.add_argument("--group_completion_profile_minimum_slots", type=int, default=2)
+    parser.add_argument(
+        "--group_query_tie_margin",
+        type=float,
+        default=0.0,
+        help="Blend the top two peer tokens when their adjusted-score gap is below this margin.",
+    )
+    parser.add_argument(
+        "--group_quantization_uncertainty_scale",
+        type=float,
+        default=0.05,
+        help="Map codebook chord error to a score-space interval radius.",
+    )
+    parser.add_argument("--group_relation_graph_dir", default=None)
+    parser.add_argument(
+        "--group_counterfactual_codebook_dir",
+        default=None,
+        help="Same-level nearest-codeword alternatives for counterfactual information gain.",
+    )
+    parser.add_argument(
+        "--group_relation_positive_strength",
+        type=float,
+        default=0.20,
+        help="Positive-edge score smoothing strength for one graph step.",
+    )
+    parser.add_argument(
+        "--group_relation_negative_strength",
+        type=float,
+        default=0.10,
+        help="Negative-edge boundary sharpening strength for one graph step.",
+    )
+    parser.add_argument(
+        "--group_relation_maximum_delta",
+        type=float,
+        default=0.05,
+        help="Maximum absolute query-score change from relation correction.",
     )
     parser.add_argument("--group_level_margin_threshold", type=float, default=0.25)
     parser.add_argument("--group_level_margin_temperature", type=float, default=0.10)
@@ -1226,6 +1732,146 @@ def main():
         raise ValueError("--group_competitor_weight must be non-negative")
     if args.group_query_temperature <= 0.0:
         raise ValueError("--group_query_temperature must be positive")
+    spatial_readout = args.group_readout in {
+        "equal_query_spatial_posterior",
+        "equal_query_spatial_geodesic",
+        "equal_query_global_sparsemax",
+        "equal_query_global_entmax15",
+        "equal_query_global_entmax15_geodesic",
+        "equal_query_global_anchor_entmax15",
+        "equal_query_global_anchor_null_entmax15",
+        "equal_query_global_anchor_null_entmax15_geodesic",
+        "equal_query_seeded_group_completion",
+        "equal_query_anisotropic_group_completion",
+        "equal_query_seed_anisotropic_group_completion",
+        "equal_query_profile_group_completion",
+    }
+    if spatial_readout != bool(args.spatial_group_posterior_dir):
+        raise ValueError(
+            "A spatial-posterior readout and --spatial_group_posterior_dir are required together"
+        )
+    if args.spatial_posterior_maximum_penalty < 0.0:
+        raise ValueError("--spatial_posterior_maximum_penalty must be non-negative")
+    if args.spatial_posterior_contrast_temperature <= 0.0:
+        raise ValueError("--spatial_posterior_contrast_temperature must be positive")
+    if args.spatial_posterior_core_membership <= 0.0:
+        raise ValueError("--spatial_posterior_core_membership must be positive")
+    if not 0.0 <= args.spatial_posterior_entropy_relaxation <= 1.0:
+        raise ValueError("--spatial_posterior_entropy_relaxation must be in [0, 1]")
+    if not 0.0 <= args.spatial_posterior_recovery_factor <= 1.0:
+        raise ValueError("--spatial_posterior_recovery_factor must be in [0, 1]")
+    if args.global_group_temperature <= 0.0:
+        raise ValueError("--global_group_temperature must be positive")
+    if not 0.0 <= args.global_group_semantic_weight <= 1.0:
+        raise ValueError("--global_group_semantic_weight must be in [0, 1]")
+    if args.global_group_ring_contrast_strength < 0.0:
+        raise ValueError("--global_group_ring_contrast_strength must be non-negative")
+    if args.global_group_maximum_penalty < 0.0:
+        raise ValueError("--global_group_maximum_penalty must be non-negative")
+    if not 0.0 <= args.global_group_entropy_relaxation <= 1.0:
+        raise ValueError("--global_group_entropy_relaxation must be in [0, 1]")
+    if not 0.0 <= args.global_group_anchor_quantile <= 1.0:
+        raise ValueError("--global_group_anchor_quantile must be in [0, 1]")
+    if not 0.0 <= args.global_group_outside_quantile <= 1.0:
+        raise ValueError("--global_group_outside_quantile must be in [0, 1]")
+    if args.global_group_anchor_temperature <= 0.0:
+        raise ValueError("--global_group_anchor_temperature must be positive")
+    if not (
+        args.global_group_semantic_preservation_quantile == -1.0
+        or 0.0 <= args.global_group_semantic_preservation_quantile <= 1.0
+    ):
+        raise ValueError(
+            "--global_group_semantic_preservation_quantile must be -1 or in [0, 1]"
+        )
+    if (
+        args.group_readout in {
+            "equal_query_seeded_group_completion",
+            "equal_query_anisotropic_group_completion",
+            "equal_query_seed_anisotropic_group_completion",
+            "equal_query_profile_group_completion",
+        }
+        and args.global_group_semantic_preservation_quantile < 0.0
+    ):
+        raise ValueError(
+            "Seeded Group completion requires a semantic-preservation quantile"
+        )
+    if not 0.0 <= args.group_completion_seed_quantile <= 1.0:
+        raise ValueError("--group_completion_seed_quantile must be in [0, 1]")
+    if not 0.0 <= args.group_completion_seed_support <= 1.0:
+        raise ValueError("--group_completion_seed_support must be in [0, 1]")
+    if not np.isfinite(args.group_completion_seed_score_floor):
+        raise ValueError("--group_completion_seed_score_floor must be finite")
+    if not 0.0 <= args.group_completion_target_quantile <= 1.0:
+        raise ValueError("--group_completion_target_quantile must be in [0, 1]")
+    if not 0.0 < args.group_completion_boundary_membership <= args.spatial_posterior_core_membership:
+        raise ValueError("--group_completion_boundary_membership must be in (0, core]")
+    if args.group_completion_semantic_delta < 0.0:
+        raise ValueError("--group_completion_semantic_delta must be non-negative")
+    if args.group_completion_agreement_temperature <= 0.0:
+        raise ValueError("--group_completion_agreement_temperature must be positive")
+    if not 0.0 <= args.group_completion_strength <= 1.0:
+        raise ValueError("--group_completion_strength must be in [0, 1]")
+    if args.group_completion_max_expansion_ratio < 0.0:
+        raise ValueError("--group_completion_max_expansion_ratio must be non-negative")
+    if args.group_completion_minimum_seed_points <= 0:
+        raise ValueError("--group_completion_minimum_seed_points must be positive")
+    if args.group_completion_minimum_contact < 0.0:
+        raise ValueError("--group_completion_minimum_contact must be non-negative")
+    if args.group_completion_maximum_hops <= 0:
+        raise ValueError("--group_completion_maximum_hops must be positive")
+    if not 0.0 < args.group_completion_anisotropic_axis_floor <= 1.0:
+        raise ValueError("--group_completion_anisotropic_axis_floor must be in (0, 1]")
+    if not 0.0 <= args.group_completion_anisotropic_budget_floor <= 1.0:
+        raise ValueError("--group_completion_anisotropic_budget_floor must be in [0, 1]")
+    if not 0.0 <= args.group_completion_anisotropic_semantic_floor <= 1.0:
+        raise ValueError("--group_completion_anisotropic_semantic_floor must be in [0, 1]")
+    if args.group_completion_anisotropic_direction_power <= 0.0:
+        raise ValueError("--group_completion_anisotropic_direction_power must be positive")
+    if not 0.0 <= args.group_completion_profile_quantile <= 1.0:
+        raise ValueError("--group_completion_profile_quantile must be in [0, 1]")
+    if args.group_completion_profile_margin < 0.0:
+        raise ValueError("--group_completion_profile_margin must be non-negative")
+    if args.group_completion_profile_temperature <= 0.0:
+        raise ValueError("--group_completion_profile_temperature must be positive")
+    if not 1 <= args.group_completion_profile_minimum_slots <= args.group_topk:
+        raise ValueError("--group_completion_profile_minimum_slots must be in [1, group_topk]")
+    anisotropic_readout = args.group_readout in {
+        "equal_query_anisotropic_group_completion",
+        "equal_query_seed_anisotropic_group_completion",
+    }
+    if anisotropic_readout != bool(args.group_anisotropic_geometry_dir):
+        raise ValueError(
+            "Anisotropic Group completion and --group_anisotropic_geometry_dir are required together"
+        )
+    if args.group_query_tie_margin < 0.0:
+        raise ValueError("--group_query_tie_margin must be non-negative")
+    if args.group_quantization_uncertainty_scale < 0.0:
+        raise ValueError(
+            "--group_quantization_uncertainty_scale must be non-negative"
+        )
+    if (
+        args.group_relation_positive_strength < 0.0
+        or args.group_relation_negative_strength < 0.0
+    ):
+        raise ValueError("Relation graph strengths must be non-negative")
+    if args.group_relation_maximum_delta <= 0.0:
+        raise ValueError("--group_relation_maximum_delta must be positive")
+    relation_readout = args.group_readout in {
+        "equal_query_relation_graph",
+        "equal_query_multiscale_set_relation",
+    }
+    if relation_readout != bool(args.group_relation_graph_dir):
+        raise ValueError(
+            "A relation readout and --group_relation_graph_dir are required together"
+        )
+    counterfactual_readout = (
+        args.group_readout == "equal_query_counterfactual_information_gain"
+    )
+    if counterfactual_readout != bool(args.group_counterfactual_codebook_dir):
+        raise ValueError(
+            "equal_query_counterfactual_information_gain and "
+            "--group_counterfactual_codebook_dir are required together"
+        )
     if args.group_level_margin_threshold < 0.0:
         raise ValueError("--group_level_margin_threshold must be non-negative")
     if args.group_level_margin_temperature <= 0.0:
@@ -1327,6 +1973,10 @@ def main():
             np.asarray(keep_mask, dtype=bool)
         ).to("cuda")
     group_hierarchy = None
+    spatial_posterior = None
+    anisotropic_geometry = None
+    relation_graph = None
+    counterfactual_neighborhoods = None
     object_codebook = None
     sparse_hypothesis = None
     if args.object_codebook_dir:
@@ -1343,12 +1993,50 @@ def main():
         if group_hierarchy.num_gaussians != codebook.num_gaussians:
             raise ValueError("Group assignments do not match the Gaussian codebook")
     if group_hierarchy is not None:
+        if group_hierarchy.num_gaussians != codebook.num_gaussians:
+            raise ValueError("Group hierarchy does not match the Gaussian codebook")
         group_hierarchy.set_feature_agreement_gate(
             codebook,
             args.group_feature_agreement_floor,
             args.group_feature_agreement_power,
             args.activation_chunk,
         )
+    if args.spatial_group_posterior_dir:
+        spatial_posterior = QueryConditionedSpatialPosterior(
+            args.spatial_group_posterior_dir
+        )
+        if spatial_posterior.num_gaussians != codebook.num_gaussians:
+            raise ValueError("Spatial posterior does not match the Gaussian codebook")
+    if args.group_anisotropic_geometry_dir:
+        anisotropic_geometry = GroupAnisotropicGeometry(
+            args.group_anisotropic_geometry_dir
+        )
+        if spatial_posterior is None:
+            raise ValueError("Anisotropic geometry requires a spatial posterior")
+        if (
+            anisotropic_geometry.num_gaussians != codebook.num_gaussians
+            or anisotropic_geometry.num_atoms != spatial_posterior.num_atoms
+            or anisotropic_geometry.num_groups != spatial_posterior.core_keys.shape[0]
+        ):
+            raise ValueError("Anisotropic geometry does not match the spatial posterior")
+    if args.group_relation_graph_dir:
+        if args.group_readout == "equal_query_multiscale_set_relation":
+            relation_graph = MultiscaleSetRelationGraph(
+                args.group_relation_graph_dir
+            )
+        else:
+            relation_graph = SignedGaussianRelationGraph(
+                args.group_relation_graph_dir
+            )
+        if relation_graph.num_gaussians != codebook.num_gaussians:
+            raise ValueError("Relation graph does not match the Gaussian codebook")
+    if args.group_counterfactual_codebook_dir:
+        if group_hierarchy is None or group_hierarchy.artifact_dir is None:
+            raise ValueError("Counterfactual codebooks require a resident hierarchy artifact")
+        counterfactual_neighborhoods = CounterfactualCodebookNeighborhoods(
+            args.group_counterfactual_codebook_dir
+        )
+        counterfactual_neighborhoods.validate_memory(group_hierarchy.artifact_dir)
     if args.hypothesis_dir:
         sparse_hypothesis = SparseSemanticHypothesis(args.hypothesis_dir)
         if (
@@ -1392,6 +2080,8 @@ def main():
         or args.group_readout in {"dual_agreement", "dual_contrastive"}
     ):
         group_hierarchy.set_query_activations(clip_model, len(categories))
+    if spatial_posterior is not None:
+        spatial_posterior.set_query_activations(clip_model, len(categories))
     background = torch.zeros(3, dtype=torch.float32, device="cuda")
     thresholds = sorted(set(args.thresholds))
     route_diagnostics = {}
@@ -1452,6 +2142,27 @@ def main():
             "calibrated_hierarchical_memory",
             "equal_query_softmax",
             "equal_query_max",
+            "equal_query_margin_top2",
+            "equal_query_percentile_max",
+            "equal_query_tail_max",
+            "equal_query_information_gain",
+            "equal_query_counterfactual_information_gain",
+            "equal_query_quantization_lcb",
+            "equal_query_quantization_percentile_lcb",
+            "equal_query_relation_graph",
+            "equal_query_multiscale_set_relation",
+            "equal_query_spatial_posterior",
+            "equal_query_spatial_geodesic",
+            "equal_query_global_sparsemax",
+            "equal_query_global_entmax15",
+            "equal_query_global_entmax15_geodesic",
+            "equal_query_global_anchor_entmax15",
+            "equal_query_global_anchor_null_entmax15",
+            "equal_query_global_anchor_null_entmax15_geodesic",
+            "equal_query_seeded_group_completion",
+            "equal_query_anisotropic_group_completion",
+            "equal_query_seed_anisotropic_group_completion",
+            "equal_query_profile_group_completion",
         }:
             candidate_scores, memberships, valid = group_hierarchy.candidate_activation(
                 clip_model,
@@ -1475,6 +2186,31 @@ def main():
                     or args.group_readout == "calibrated_hierarchical_memory"
                     or args.group_readout == "equal_query_softmax"
                     or args.group_readout == "equal_query_max"
+                    or args.group_readout == "equal_query_margin_top2"
+                    or args.group_readout == "equal_query_percentile_max"
+                    or args.group_readout == "equal_query_tail_max"
+                    or args.group_readout == "equal_query_information_gain"
+                    or args.group_readout
+                    == "equal_query_counterfactual_information_gain"
+                    or args.group_readout == "equal_query_quantization_lcb"
+                    or args.group_readout
+                    == "equal_query_quantization_percentile_lcb"
+                    or args.group_readout == "equal_query_relation_graph"
+                    or args.group_readout == "equal_query_multiscale_set_relation"
+                    or args.group_readout == "equal_query_spatial_posterior"
+                    or args.group_readout == "equal_query_spatial_geodesic"
+                    or args.group_readout == "equal_query_global_sparsemax"
+                    or args.group_readout == "equal_query_global_entmax15"
+                    or args.group_readout == "equal_query_global_entmax15_geodesic"
+                    or args.group_readout == "equal_query_global_anchor_entmax15"
+                    or args.group_readout
+                    == "equal_query_global_anchor_null_entmax15"
+                    or args.group_readout
+                    == "equal_query_global_anchor_null_entmax15_geodesic"
+                    or args.group_readout == "equal_query_seeded_group_completion"
+                    or args.group_readout == "equal_query_anisotropic_group_completion"
+                    or args.group_readout == "equal_query_seed_anisotropic_group_completion"
+                    or args.group_readout == "equal_query_profile_group_completion"
                 )
                 else None
             )
@@ -1547,7 +2283,212 @@ def main():
                     args.group_level_margin_threshold,
                     args.group_level_margin_temperature,
                 )
-            elif args.group_readout in {"equal_query_softmax", "equal_query_max"}:
+            elif args.group_readout in {
+                "equal_query_global_sparsemax",
+                "equal_query_global_entmax15",
+                "equal_query_global_entmax15_geodesic",
+                "equal_query_global_anchor_entmax15",
+                "equal_query_global_anchor_null_entmax15",
+                "equal_query_global_anchor_null_entmax15_geodesic",
+                "equal_query_seeded_group_completion",
+                "equal_query_anisotropic_group_completion",
+                "equal_query_seed_anisotropic_group_completion",
+                "equal_query_profile_group_completion",
+            }:
+                candidate_levels = group_hierarchy.candidate_levels(args.group_topk)
+                mode = "sparsemax" if args.group_readout == "equal_query_global_sparsemax" else "entmax15"
+                global_tables = spatial_posterior.global_candidate_tables(
+                    category_index,
+                    candidate_levels,
+                    candidate_scores,
+                    mode,
+                    args.global_group_temperature,
+                    args.global_group_semantic_weight,
+                    args.global_group_ring_contrast_strength,
+                )
+                confidence, probability, spatial_membership, spatial_entropy, spatial_valid, group_stats = global_tables
+                geodesic = args.group_readout in {
+                    "equal_query_global_entmax15_geodesic",
+                    "equal_query_global_anchor_null_entmax15_geodesic",
+                }
+                seeded_completion = args.group_readout in {
+                    "equal_query_seeded_group_completion",
+                    "equal_query_anisotropic_group_completion",
+                    "equal_query_seed_anisotropic_group_completion",
+                    "equal_query_profile_group_completion",
+                }
+                anisotropic_completion = args.group_readout in {
+                    "equal_query_anisotropic_group_completion",
+                    "equal_query_seed_anisotropic_group_completion",
+                }
+                seed_anisotropic_completion = (
+                    args.group_readout == "equal_query_seed_anisotropic_group_completion"
+                )
+                profile_completion = (
+                    args.group_readout == "equal_query_profile_group_completion"
+                )
+                anchored = "global_anchor" in args.group_readout or seeded_completion
+                use_null_expert = "anchor_null" in args.group_readout
+                activation, diagnostics = fuse_global_sparse_group_retrieval(
+                    activation,
+                    candidate_scores,
+                    memberships,
+                    candidate_reliability,
+                    valid,
+                    args.group_query_temperature,
+                    confidence,
+                    probability,
+                    spatial_membership,
+                    spatial_entropy,
+                    spatial_valid,
+                    args.global_group_maximum_penalty,
+                    args.spatial_posterior_core_membership,
+                    args.global_group_entropy_relaxation,
+                    gaussian_atom_ids=(
+                        spatial_posterior.gaussian_atom_ids if geodesic else None
+                    ),
+                    atom_neighbor_ids=(
+                        spatial_posterior.atom_neighbor_ids if geodesic else None
+                    ),
+                    geodesic_delta=args.spatial_posterior_geodesic_delta,
+                    recovery_factor=args.spatial_posterior_recovery_factor,
+                    anchor_quantile=(
+                        args.global_group_anchor_quantile if anchored else None
+                    ),
+                    outside_quantile=args.global_group_outside_quantile,
+                    anchor_temperature=args.global_group_anchor_temperature,
+                    use_null_expert=use_null_expert,
+                    semantic_preservation_quantile=(
+                        args.global_group_semantic_preservation_quantile
+                        if args.global_group_semantic_preservation_quantile >= 0.0
+                        else None
+                    ),
+                )
+                diagnostics["global_group_posterior"] = group_stats
+                if seeded_completion:
+                    group_ids, group_id_valid = spatial_posterior.candidate_group_ids(
+                        candidate_levels
+                    )
+                    completion_valid = spatial_valid & group_id_valid
+                    activation, completion_diagnostics = complete_scores_from_seeded_groups(
+                        activation,
+                        candidate_scores,
+                        memberships,
+                        candidate_reliability,
+                        valid,
+                        args.group_query_temperature,
+                        group_ids,
+                        confidence,
+                        spatial_membership,
+                        completion_valid,
+                        spatial_posterior.gaussian_atom_ids,
+                        spatial_posterior.atom_neighbor_ids,
+                        spatial_posterior.atom_neighbor_weights,
+                        args.spatial_posterior_core_membership,
+                        args.group_completion_boundary_membership,
+                        args.group_completion_seed_support,
+                        args.group_completion_seed_quantile,
+                        args.group_completion_seed_score_floor,
+                        args.group_completion_target_quantile,
+                        args.group_completion_semantic_delta,
+                        args.group_completion_agreement_temperature,
+                        args.group_completion_strength,
+                        args.group_completion_max_expansion_ratio,
+                        args.group_completion_minimum_seed_points,
+                        args.group_completion_minimum_contact,
+                        args.group_completion_maximum_hops,
+                        atom_centroids=(
+                            anisotropic_geometry.atom_centroids
+                            if anisotropic_completion else None
+                        ),
+                        group_principal_axes=(
+                            anisotropic_geometry.group_principal_axes
+                            if anisotropic_completion else None
+                        ),
+                        group_axis_ratios=(
+                            anisotropic_geometry.group_axis_ratios
+                            if anisotropic_completion else None
+                        ),
+                        anisotropic_axis_floor=(
+                            args.group_completion_anisotropic_axis_floor
+                        ),
+                        anisotropic_budget_floor=(
+                            args.group_completion_anisotropic_budget_floor
+                        ),
+                        anisotropic_semantic_floor=(
+                            args.group_completion_anisotropic_semantic_floor
+                        ),
+                        anisotropic_direction_power=(
+                            args.group_completion_anisotropic_direction_power
+                        ),
+                        seed_conditioned_anisotropy=seed_anisotropic_completion,
+                        token_profile_gate=profile_completion,
+                        token_profile_quantile=args.group_completion_profile_quantile,
+                        token_profile_margin=args.group_completion_profile_margin,
+                        token_profile_temperature=args.group_completion_profile_temperature,
+                        token_profile_minimum_slots=(
+                            args.group_completion_profile_minimum_slots
+                        ),
+                    )
+                    diagnostics["seeded_group_completion"] = completion_diagnostics
+            elif args.group_readout in {
+                "equal_query_spatial_posterior",
+                "equal_query_spatial_geodesic",
+            }:
+                candidate_levels = group_hierarchy.candidate_levels(args.group_topk)
+                spatial_tables = spatial_posterior.candidate_tables(
+                    category_index, candidate_levels
+                )
+                geodesic = args.group_readout == "equal_query_spatial_geodesic"
+                activation, diagnostics = fuse_query_conditioned_spatial_posterior(
+                    activation,
+                    candidate_scores,
+                    memberships,
+                    candidate_reliability,
+                    valid,
+                    args.group_query_temperature,
+                    *spatial_tables,
+                    args.spatial_posterior_ring_weight,
+                    args.spatial_posterior_contrast_temperature,
+                    args.spatial_posterior_maximum_penalty,
+                    args.spatial_posterior_core_membership,
+                    args.spatial_posterior_entropy_relaxation,
+                    gaussian_atom_ids=(
+                        spatial_posterior.gaussian_atom_ids if geodesic else None
+                    ),
+                    atom_neighbor_ids=(
+                        spatial_posterior.atom_neighbor_ids if geodesic else None
+                    ),
+                    geodesic_delta=args.spatial_posterior_geodesic_delta,
+                    recovery_factor=args.spatial_posterior_recovery_factor,
+                )
+            elif args.group_readout in {
+                "equal_query_softmax",
+                "equal_query_max",
+                "equal_query_margin_top2",
+                "equal_query_relation_graph",
+                "equal_query_multiscale_set_relation",
+            }:
+                candidate_levels = group_hierarchy.candidate_levels(args.group_topk)
+                set_relation_diagnostics = None
+                if args.group_readout == "equal_query_multiscale_set_relation":
+                    selectable = (
+                        valid
+                        & (memberships.clamp(0.0, 1.0) > 0.0)
+                        & (candidate_reliability.clamp(0.0, 1.0) > 0.0)
+                    )
+                    candidate_scores, set_relation_diagnostics = (
+                        fuse_multiscale_set_relation_token_scores(
+                            candidate_scores,
+                            candidate_levels,
+                            selectable,
+                            relation_graph.neighbor_ids,
+                            relation_graph.signed_weights,
+                            args.group_relation_positive_strength,
+                            args.group_relation_negative_strength,
+                            args.group_relation_maximum_delta,
+                        )
+                    )
                 activation, diagnostics = fuse_equal_query_tokens(
                     activation,
                     candidate_scores,
@@ -1555,8 +2496,128 @@ def main():
                     candidate_reliability,
                     valid,
                     args.group_query_temperature,
+                    candidate_levels,
+                    hard=args.group_readout != "equal_query_softmax",
+                    tie_margin=(
+                        args.group_query_tie_margin
+                        if args.group_readout == "equal_query_margin_top2"
+                        else 0.0
+                    ),
+                )
+                if args.group_readout == "equal_query_relation_graph":
+                    activation, relation_diagnostics = (
+                        fuse_signed_relation_graph_scores(
+                            activation,
+                            relation_graph.neighbor_ids,
+                            relation_graph.signed_weights,
+                            args.group_relation_positive_strength,
+                            args.group_relation_negative_strength,
+                            args.group_relation_maximum_delta,
+                        )
+                    )
+                    diagnostics["relation_graph"] = relation_diagnostics
+                if set_relation_diagnostics is not None:
+                    diagnostics["multiscale_set_relation"] = set_relation_diagnostics
+            elif args.group_readout in {
+                "equal_query_percentile_max",
+                "equal_query_tail_max",
+            }:
+                candidate_levels = group_hierarchy.candidate_levels(args.group_topk)
+                percentiles, tail_evidence, calibration_stats = (
+                    group_hierarchy.candidate_level_calibration(
+                        clip_model,
+                        category_index,
+                        candidate_scores,
+                        candidate_levels,
+                        valid,
+                    )
+                )
+                calibration_mode = (
+                    "percentile"
+                    if args.group_readout == "equal_query_percentile_max"
+                    else "tail_evidence"
+                )
+                calibration_scores = (
+                    percentiles
+                    if calibration_mode == "percentile"
+                    else tail_evidence
+                )
+                activation, diagnostics = fuse_calibrated_equal_query_tokens(
+                    activation,
+                    candidate_scores,
+                    calibration_scores,
+                    memberships,
+                    candidate_reliability,
+                    valid,
+                    calibration_mode,
+                    args.group_query_temperature,
+                    candidate_levels,
+                )
+                diagnostics["level_reference_distributions"] = calibration_stats
+            elif args.group_readout in {
+                "equal_query_information_gain",
+                "equal_query_counterfactual_information_gain",
+            }:
+                candidate_levels = group_hierarchy.candidate_levels(args.group_topk)
+                information_gain, local_gain, information_stats = (
+                    group_hierarchy.candidate_information_gain(
+                        clip_model,
+                        category_index,
+                        candidate_scores,
+                        candidate_levels,
+                        valid,
+                        args.group_query_temperature,
+                        counterfactual_neighborhoods=(
+                            counterfactual_neighborhoods
+                            if args.group_readout
+                            == "equal_query_counterfactual_information_gain"
+                            else None
+                        ),
+                        topk=args.group_topk,
+                    )
+                )
+                activation, diagnostics = fuse_information_gain_equal_query_tokens(
+                    activation,
+                    candidate_scores,
+                    information_gain,
+                    memberships,
+                    candidate_reliability,
+                    valid,
+                    candidate_levels,
+                    local_gain,
+                )
+                diagnostics["information_gain_reference"] = information_stats
+            elif args.group_readout in {
+                "equal_query_quantization_lcb",
+                "equal_query_quantization_percentile_lcb",
+            }:
+                percentile_error = (
+                    args.group_readout
+                    == "equal_query_quantization_percentile_lcb"
+                )
+                activation, diagnostics = fuse_quantization_aware_equal_query_tokens(
+                    activation,
+                    candidate_scores,
+                    memberships,
+                    candidate_reliability,
+                    (
+                        group_hierarchy.candidate_quantization_error_percentile(
+                            args.group_topk
+                        )
+                        if percentile_error
+                        else group_hierarchy.candidate_quantization_error(
+                            args.group_topk
+                        )
+                    ),
+                    valid,
+                    args.group_query_temperature,
+                    args.group_quantization_uncertainty_scale,
                     group_hierarchy.candidate_levels(args.group_topk),
-                    hard=args.group_readout == "equal_query_max",
+                    uncertainty_measure_name=(
+                        "within_level_error_midrank_percentile"
+                        if percentile_error
+                        else "chord_error"
+                    ),
                 )
             else:
                 activation, diagnostics = route_group_hypotheses(
@@ -1598,6 +2659,14 @@ def main():
         semantic_storage += int(object_codebook.manifest["storage"]["total_semantic_bytes"])
     if group_hierarchy is not None:
         semantic_storage += int(group_hierarchy.storage_bytes)
+    if spatial_posterior is not None:
+        semantic_storage += int(spatial_posterior.storage_bytes)
+    if anisotropic_geometry is not None:
+        semantic_storage += int(anisotropic_geometry.storage_bytes)
+    if relation_graph is not None:
+        semantic_storage += relation_graph.storage_bytes
+    if counterfactual_neighborhoods is not None:
+        semantic_storage += counterfactual_neighborhoods.storage_bytes
     if sparse_hypothesis is not None:
         semantic_storage += sparse_hypothesis.storage_bytes
     if query_route_base_codebook is not None:
@@ -1657,6 +2726,29 @@ def main():
                 "group_codebook": group_hierarchy.codebook_path if group_hierarchy else None,
                 "group_assignments": group_hierarchy.assignments_path if group_hierarchy else None,
                 "group_hierarchy_dir": group_hierarchy.artifact_dir if group_hierarchy else None,
+                "group_relation_graph_dir": relation_graph.dir if relation_graph else None,
+                "group_relation_graph_manifest": relation_graph.manifest
+                if relation_graph
+                else None,
+                "group_counterfactual_codebook_dir": (
+                    counterfactual_neighborhoods.dir
+                    if counterfactual_neighborhoods
+                    else None
+                ),
+                "group_counterfactual_codebook_manifest": (
+                    counterfactual_neighborhoods.manifest
+                    if counterfactual_neighborhoods
+                    else None
+                ),
+                "group_relation_positive_strength": float(
+                    args.group_relation_positive_strength
+                ),
+                "group_relation_negative_strength": float(
+                    args.group_relation_negative_strength
+                ),
+                "group_relation_maximum_delta": float(
+                    args.group_relation_maximum_delta
+                ),
                 "rgr_alpha": float(args.rgr_alpha),
                 "rgr_mode": args.rgr_mode,
                 "group_topk": int(args.group_topk),
@@ -1667,6 +2759,10 @@ def main():
                 "group_membership_confidence": bool(args.group_membership_confidence),
                 "group_readout": args.group_readout,
                 "group_query_temperature": float(args.group_query_temperature),
+                "group_query_tie_margin": float(args.group_query_tie_margin),
+                "group_quantization_uncertainty_scale": float(
+                    args.group_quantization_uncertainty_scale
+                ),
                 "group_level_margin_threshold": float(args.group_level_margin_threshold),
                 "group_level_margin_temperature": float(args.group_level_margin_temperature),
                 "group_competitor_weight": float(args.group_competitor_weight),
@@ -1829,12 +2925,126 @@ def main():
         "group_codebook": group_hierarchy.codebook_path if group_hierarchy else None,
         "group_assignments": group_hierarchy.assignments_path if group_hierarchy else None,
         "group_hierarchy_dir": group_hierarchy.artifact_dir if group_hierarchy else None,
+        "spatial_group_posterior_dir": (
+            spatial_posterior.dir if spatial_posterior else None
+        ),
+        "spatial_group_posterior_manifest": (
+            spatial_posterior.manifest if spatial_posterior else None
+        ),
+        "group_anisotropic_geometry_dir": (
+            anisotropic_geometry.dir if anisotropic_geometry else None
+        ),
+        "group_anisotropic_geometry_manifest": (
+            anisotropic_geometry.manifest if anisotropic_geometry else None
+        ),
+        "group_counterfactual_codebook_dir": (
+            counterfactual_neighborhoods.dir
+            if counterfactual_neighborhoods
+            else None
+        ),
+        "group_counterfactual_codebook_manifest": (
+            counterfactual_neighborhoods.manifest
+            if counterfactual_neighborhoods
+            else None
+        ),
         "rgr_alpha": float(args.rgr_alpha),
         "rgr_mode": args.rgr_mode,
         "point_gate_floor": float(args.point_gate_floor),
         "point_gate_power": float(args.point_gate_power),
         "group_readout": args.group_readout,
         "group_query_temperature": float(args.group_query_temperature),
+        "group_query_tie_margin": float(args.group_query_tie_margin),
+        "spatial_posterior_maximum_penalty": float(
+            args.spatial_posterior_maximum_penalty
+        ),
+        "spatial_posterior_ring_weight": float(args.spatial_posterior_ring_weight),
+        "spatial_posterior_contrast_temperature": float(
+            args.spatial_posterior_contrast_temperature
+        ),
+        "spatial_posterior_core_membership": float(
+            args.spatial_posterior_core_membership
+        ),
+        "spatial_posterior_entropy_relaxation": float(
+            args.spatial_posterior_entropy_relaxation
+        ),
+        "spatial_posterior_geodesic_delta": float(
+            args.spatial_posterior_geodesic_delta
+        ),
+        "spatial_posterior_recovery_factor": float(
+            args.spatial_posterior_recovery_factor
+        ),
+        "global_group_temperature": float(args.global_group_temperature),
+        "global_group_semantic_weight": float(args.global_group_semantic_weight),
+        "global_group_ring_contrast_strength": float(
+            args.global_group_ring_contrast_strength
+        ),
+        "global_group_maximum_penalty": float(args.global_group_maximum_penalty),
+        "global_group_entropy_relaxation": float(
+            args.global_group_entropy_relaxation
+        ),
+        "global_group_anchor_quantile": float(args.global_group_anchor_quantile),
+        "global_group_outside_quantile": float(args.global_group_outside_quantile),
+        "global_group_anchor_temperature": float(
+            args.global_group_anchor_temperature
+        ),
+        "global_group_semantic_preservation_quantile": float(
+            args.global_group_semantic_preservation_quantile
+        ),
+        "group_completion_seed_quantile": float(args.group_completion_seed_quantile),
+        "group_completion_seed_support": float(args.group_completion_seed_support),
+        "group_completion_seed_score_floor": float(
+            args.group_completion_seed_score_floor
+        ),
+        "group_completion_target_quantile": float(
+            args.group_completion_target_quantile
+        ),
+        "group_completion_boundary_membership": float(
+            args.group_completion_boundary_membership
+        ),
+        "group_completion_semantic_delta": float(
+            args.group_completion_semantic_delta
+        ),
+        "group_completion_agreement_temperature": float(
+            args.group_completion_agreement_temperature
+        ),
+        "group_completion_strength": float(args.group_completion_strength),
+        "group_completion_max_expansion_ratio": float(
+            args.group_completion_max_expansion_ratio
+        ),
+        "group_completion_minimum_seed_points": int(
+            args.group_completion_minimum_seed_points
+        ),
+        "group_completion_minimum_contact": float(
+            args.group_completion_minimum_contact
+        ),
+        "group_completion_maximum_hops": int(
+            args.group_completion_maximum_hops
+        ),
+        "group_completion_anisotropic_axis_floor": float(
+            args.group_completion_anisotropic_axis_floor
+        ),
+        "group_completion_anisotropic_budget_floor": float(
+            args.group_completion_anisotropic_budget_floor
+        ),
+        "group_completion_anisotropic_semantic_floor": float(
+            args.group_completion_anisotropic_semantic_floor
+        ),
+        "group_completion_anisotropic_direction_power": float(
+            args.group_completion_anisotropic_direction_power
+        ),
+        "group_completion_profile_quantile": float(
+            args.group_completion_profile_quantile
+        ),
+        "group_completion_profile_margin": float(args.group_completion_profile_margin),
+        "group_completion_profile_temperature": float(
+            args.group_completion_profile_temperature
+        ),
+        "group_completion_profile_minimum_slots": int(
+            args.group_completion_profile_minimum_slots
+        ),
+        "group_quantization_uncertainty_scale": float(
+            args.group_quantization_uncertainty_scale
+        ),
         "group_level_margin_threshold": float(args.group_level_margin_threshold),
         "group_level_margin_temperature": float(args.group_level_margin_temperature),
         "group_competitor_weight": float(args.group_competitor_weight),
